@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="535.68pt" height="391.68pt" viewBox="0 0 535.68 391.68" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-26T15:52:38.907689</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 391.68 
+L 535.68 391.68 
+L 535.68 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 267.84 284.880231 
+Q 267.84 253.254326 267.84 223.86449 
+" clip-path="url(#pdac028eca0)" style="fill: none; stroke: #4d4d4d; stroke-width: 2; stroke-linecap: round"/>
+    <path d="M 264.64 230.26449 
+L 267.84 223.86449 
+L 271.04 230.26449 
+z
+" clip-path="url(#pdac028eca0)" style="fill: #4d4d4d; stroke: #4d4d4d; stroke-width: 2; stroke-linecap: round"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 267.84 153.652404 
+Q 267.84 122.0265 267.84 92.636664 
+" clip-path="url(#pdac028eca0)" style="fill: none; stroke: #4d4d4d; stroke-width: 2; stroke-linecap: round"/>
+    <path d="M 264.64 99.036664 
+L 267.84 92.636664 
+L 271.04 99.036664 
+z
+" clip-path="url(#pdac028eca0)" style="fill: #4d4d4d; stroke: #4d4d4d; stroke-width: 2; stroke-linecap: round"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 137.52 348.802435 
+L 398.16 348.802435 
+Q 402.33024 348.802435 402.33024 345.521739 
+L 402.33024 292.210435 
+Q 402.33024 288.929739 398.16 288.929739 
+L 137.52 288.929739 
+Q 133.34976 288.929739 133.34976 292.210435 
+L 133.34976 345.521739 
+Q 133.34976 348.802435 137.52 348.802435 
+z
+" clip-path="url(#pdac028eca0)" style="fill: #ffffff; stroke: #4d4d4d; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 179.2224 221.675478 
+L 356.4576 221.675478 
+Q 360.62784 221.675478 360.62784 218.394783 
+L 360.62784 156.881739 
+Q 360.62784 153.601043 356.4576 153.601043 
+L 179.2224 153.601043 
+Q 175.05216 153.601043 175.05216 156.881739 
+L 175.05216 218.394783 
+Q 175.05216 221.675478 179.2224 221.675478 
+z
+" clip-path="url(#pdac028eca0)" style="fill: #ffffff; stroke: #c0392b; stroke-width: 2.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 137.52 86.346783 
+L 398.16 86.346783 
+Q 402.33024 86.346783 402.33024 83.066087 
+L 402.33024 29.754783 
+Q 402.33024 26.474087 398.16 26.474087 
+L 137.52 26.474087 
+Q 133.34976 26.474087 133.34976 29.754783 
+L 133.34976 83.066087 
+Q 133.34976 86.346783 137.52 86.346783 
+z
+" clip-path="url(#pdac028eca0)" style="fill: #ffffff; stroke: #4d4d4d; stroke-width: 1.6; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_1">
+    <!-- $\alpha_{s-1}$ -->
+    <g style="fill: #4d4d4d" transform="translate(403.6712 256.629127)">
+     <text>
+      <tspan x="0" y="-0.703125" style="font-style: oblique; font-size: 13px; font-family: 'DejaVu Sans'; fill: #4d4d4d">α</tspan>
+      <tspan x="8.569336" y="1.246869" style="font-style: oblique; font-size: 9.1px; font-family: 'DejaVu Sans'; fill: #4d4d4d">s</tspan>
+      <tspan x="15.083301" y="1.246869" style="font-size: 9.1px; font-family: 'DejaVu Sans'; fill: #4d4d4d">−</tspan>
+      <tspan x="24.481006" y="1.246869" style="font-size: 9.1px; font-family: 'DejaVu Sans'; fill: #4d4d4d">1</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #555555" transform="translate(381.779325 267.412838)">S is the coalition</text>
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #555555" transform="translate(365.26995 278.215299)">after this feature enters</text>
+   </g>
+   <g id="text_3">
+    <!-- $\alpha_{s}$ -->
+    <g style="fill: #4d4d4d" transform="translate(109.7788 125.401301)">
+     <text>
+      <tspan x="0" y="-0.703125" style="font-style: oblique; font-size: 13px; font-family: 'DejaVu Sans'; fill: #4d4d4d">α</tspan>
+      <tspan x="8.569336" y="1.246869" style="font-style: oblique; font-size: 9.1px; font-family: 'DejaVu Sans'; fill: #4d4d4d">s</tspan>
+     </text>
+    </g>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #555555" transform="translate(79.436925 136.185012)">S is the coalition</text>
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #555555" transform="translate(59.090597 146.987473)">before this feature enters</text>
+   </g>
+   <g id="text_5">
+    <text style="font-weight: 700; font-size: 11.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #222222" x="267.84" y="21.553043" transform="rotate(-0 267.84 21.553043)">One coalition, two neighboring Shapley weights</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #555555" x="267.84" y="312.98221" transform="rotate(-0 267.84 312.98221)">size s − 1</text>
+   </g>
+   <g id="text_7">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #555555" x="267.84" y="329.816155" transform="rotate(-0 267.84 329.816155)">a coalition missing one feature</text>
+   </g>
+   <g id="text_8">
+    <text style="font-weight: 700; font-size: 15px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #c0392b" x="267.84" y="182.922919" transform="rotate(-0 267.84 182.922919)">S</text>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #555555" x="267.84" y="198.978036" transform="rotate(-0 267.84 198.978036)">size s</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #555555" x="267.84" y="50.526558" transform="rotate(-0 267.84 50.526558)">size s + 1</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 9px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #555555" x="267.84" y="67.360503" transform="rotate(-0 267.84 67.360503)">S with one more feature added</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="pdac028eca0">
+   <rect x="7.2" y="7.2" width="521.28" height="377.28"/>
+  </clipPath>
+ </defs>
+</svg>

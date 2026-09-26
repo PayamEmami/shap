@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.16">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; SHAP – SHAP Values</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./practice.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2051dbbaa7ae7a279e016470f480e120.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6075faafe157bb2a1f54b1c2b772188f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./intuition.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">SHAP Values</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">A worked case study</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#a-model-that-gives-one-number" id="toc-a-model-that-gives-one-number" class="nav-link active" data-scroll-target="#a-model-that-gives-one-number"><span class="header-section-number">1.1</span> A model that gives one number</a></li>
+  <li><a href="#explaining-by-removing-features" id="toc-explaining-by-removing-features" class="nav-link" data-scroll-target="#explaining-by-removing-features"><span class="header-section-number">1.2</span> Explaining by removing features</a></li>
+  <li><a href="#a-features-contribution-is-not-fixed" id="toc-a-features-contribution-is-not-fixed" class="nav-link" data-scroll-target="#a-features-contribution-is-not-fixed"><span class="header-section-number">1.3</span> A feature’s contribution is not fixed</a></li>
+  <li><a href="#every-order-in-which-features-can-be-added" id="toc-every-order-in-which-features-can-be-added" class="nav-link" data-scroll-target="#every-order-in-which-features-can-be-added"><span class="header-section-number">1.4</span> Every order in which features can be added</a></li>
+  <li><a href="#the-baseline" id="toc-the-baseline" class="nav-link" data-scroll-target="#the-baseline"><span class="header-section-number">1.5</span> The baseline</a></li>
+  <li><a href="#what-removing-a-feature-actually-means" id="toc-what-removing-a-feature-actually-means" class="nav-link" data-scroll-target="#what-removing-a-feature-actually-means"><span class="header-section-number">1.6</span> What “removing” a feature actually means</a></li>
+  <li><a href="#local-explanations-the-waterfall-plot" id="toc-local-explanations-the-waterfall-plot" class="nav-link" data-scroll-target="#local-explanations-the-waterfall-plot"><span class="header-section-number">1.7</span> Local explanations: the waterfall plot</a></li>
+  <li><a href="#from-one-explanation-to-many" id="toc-from-one-explanation-to-many" class="nav-link" data-scroll-target="#from-one-explanation-to-many"><span class="header-section-number">1.8</span> From one explanation to many</a></li>
+  <li><a href="#the-beeswarm-plot" id="toc-the-beeswarm-plot" class="nav-link" data-scroll-target="#the-beeswarm-plot"><span class="header-section-number">1.9</span> The beeswarm plot</a></li>
+  <li><a href="#the-dependence-plot" id="toc-the-dependence-plot" class="nav-link" data-scroll-target="#the-dependence-plot"><span class="header-section-number">1.10</span> The dependence plot</a></li>
+  <li><a href="#interactions" id="toc-interactions" class="nav-link" data-scroll-target="#interactions"><span class="header-section-number">1.11</span> Interactions</a></li>
+  <li><a href="#when-shap-is-a-good-choice" id="toc-when-shap-is-a-good-choice" class="nav-link" data-scroll-target="#when-shap-is-a-good-choice"><span class="header-section-number">1.12</span> When SHAP is a good choice</a></li>
+  <li><a href="#when-shap-should-be-interpreted-carefully" id="toc-when-shap-should-be-interpreted-carefully" class="nav-link" data-scroll-target="#when-shap-should-be-interpreted-carefully"><span class="header-section-number">1.13</span> When SHAP should be interpreted carefully</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="a-model-that-gives-one-number" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="a-model-that-gives-one-number"><span class="header-section-number">1.1</span> A model that gives one number</h2>
+<p>Suppose we have trained a machine learning model on three features, A, B, and C. We feed it one observation and it returns a prediction:</p>
+<div class="visual-card">
+<div id="fig-baseline-to-prediction" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two boxes connected by an arrow. The left box shows the value 10, labeled baseline prediction. The right box shows the value 19, labeled prediction for this observation. The arrow is labeled plus 9 to explain.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-baseline-to-prediction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/01-baseline-to-prediction.svg" class="img-fluid figure-img" alt="Two boxes connected by an arrow. The left box shows the value 10, labeled baseline prediction. The right box shows the value 19, labeled prediction for this observation. The arrow is labeled plus 9 to explain.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-baseline-to-prediction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.1: The model’s prediction for one observation, next to a baseline prediction it can be compared against.
+</figcaption>
+</figure>
+</div>
+</div>
+<ol start="19" type="1">
+<li>On its own, that number says nothing about why the model produced it. Saying “feature A is important” does not explain this particular 19 either. Importance, on its own, is not an explanation of one prediction.</li>
+</ol>
+<p>What we can do is compare 19 to something. <a href="#fig-baseline-to-prediction" class="quarto-xref">Figure&nbsp;<span>1.1</span></a> shows a second number, 10, sitting next to it. That 10 is a baseline: roughly speaking, what the model would predict if it knew nothing about this specific observation’s features, only what is typical. Once we have both numbers, a real question appears. Nine units separate the baseline from this observation’s prediction, and some combination of A, B, and C must account for them.</p>
+</section>
+<section id="explaining-by-removing-features" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="explaining-by-removing-features"><span class="header-section-number">1.2</span> Explaining by removing features</h2>
+<p>The model was trained once, on all three features, and it stays exactly as it was trained. Nothing here involves training separate models on different subsets of features. What we can do instead is ask what the model would predict if some of its inputs were made unavailable and only the rest were kept.</p>
+<p>“Unavailable” does not mean deleted. Most models expect a fixed number of inputs and cannot simply run with fewer. Later in this chapter we will show precisely what stands in for a missing feature. For now, treat it as a black box: there is a way to tell the model “pretend you don’t know B or C,” and it returns a value.</p>
+<p>Do this for every possible group of retained features, and a picture like the one below appears.</p>
+<div class="visual-card">
+<div id="fig-coalition-lattice" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A lattice of eight circles. At the bottom, the empty set with value 10. Above it, three single-feature groups A, B, C. Above those, three two-feature groups AB, AC, BC. At the top, the full group ABC with value 19.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-coalition-lattice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/04-coalition-lattice.svg" class="img-fluid figure-img" alt="A lattice of eight circles. At the bottom, the empty set with value 10. Above it, three single-feature groups A, B, C. Above those, three two-feature groups AB, AC, BC. At the top, the full group ABC with value 19.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-coalition-lattice-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.2: Every possible group of retained features, from nothing at all up to all three, with the model’s value for that group.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Each of these groups is usually called a coalition, borrowing a term from economics: a set of features that are, for the moment, “in” while the rest are “out.” <a href="#fig-coalition-lattice" class="quarto-xref">Figure&nbsp;<span>1.2</span></a> shows all eight coalitions of three features, together with what the model outputs when only that coalition is retained. The bottom is the baseline, 10, where nothing is retained. The top is 19, the full prediction, where nothing is removed. Between them sit six partial coalitions.</p>
+<p>Nothing about this picture is specific to A, B, and C being three named quantities. Any model with any features produces the same kind of lattice, just larger. The question we are working toward is how to move from this lattice to a single number for each feature: how much of the nine-unit gap belongs to A, how much to B, how much to C.</p>
+</section>
+<section id="a-features-contribution-is-not-fixed" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="a-features-contribution-is-not-fixed"><span class="header-section-number">1.3</span> A feature’s contribution is not fixed</h2>
+<p>A natural first guess is to remove one feature at a time from the full set and see how much the prediction drops. Remove A from the full coalition ABC and the prediction falls from 19 to 13, a drop of 6. That single number, tempting as it is, does not tell the whole story.</p>
+<div class="visual-card">
+<div id="fig-context-dependent" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Horizontal bar chart. A added to the empty set changes the output by 4. A added to B changes it by 6. A added to C changes it by 4. A added to B and C changes it by 6.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-context-dependent-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/02-context-dependent-contribution.svg" class="img-fluid figure-img" alt="Horizontal bar chart. A added to the empty set changes the output by 4. A added to B changes it by 6. A added to C changes it by 4. A added to B and C changes it by 6.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-context-dependent-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.3: Adding feature A to four different starting coalitions changes the model’s output by a different amount each time.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-context-dependent" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> adds feature A into four different starting points instead. Added to nothing, A is worth 4. Added to B, it is worth 6. Added to C, it is worth 4 again. Added to both B and C, it is worth 6. The same feature, the same model, the same observation, four different numbers. Whatever A “means” to this model on this observation, it is not one fixed quantity sitting inside the model waiting to be read off. Its measured effect depends on what else is already present when it gets added.</p>
+<p>This kind of context dependence can arise when the model contains interactions or other nonlinear structure. It can also arise from how missing features are represented and from relationships among predictors. The important point for now is simply that a feature’s contribution need not be the same in every context.</p>
+<p>If you already know linear regression, it is worth being precise about how this fits with what you know. For a purely additive linear model, evaluated against a simple background where features are treated independently, a feature’s contribution turns out to be the same regardless of which order the features are added in, so this whole question of “which context” would not even arise. SHAP is built for the general case, where order can matter, so it uses a definition that works whether or not it does.</p>
+</section>
+<section id="every-order-in-which-features-can-be-added" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="every-order-in-which-features-can-be-added"><span class="header-section-number">1.4</span> Every order in which features can be added</h2>
+<p>If no single context is the right one to measure A in, a reasonable response is to check all of them and combine the results. With three features there are six possible orders in which A, B, and C could be added one at a time, starting from nothing and ending at the full set.</p>
+<div class="visual-card">
+<div id="fig-removal-orders" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Six rows, each showing a path from the empty set to the full set ABC through two intermediate coalitions, with the step that adds feature A highlighted in red and labeled with the resulting change in prediction.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-removal-orders-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/03-removal-orders.svg" class="img-fluid figure-img" alt="Six rows, each showing a path from the empty set to the full set ABC through two intermediate coalitions, with the step that adds feature A highlighted in red and labeled with the resulting change in prediction.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-removal-orders-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.4: All six orders in which A, B, and C can be added, with A’s contribution highlighted in each one.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-removal-orders" class="quarto-xref">Figure&nbsp;<span>1.4</span></a> lays out all six. In two of them A is added first, straight into an empty coalition, and it is worth 4 both times. In two of them A is added second, after either B or C alone, and it is worth 6 or 4 depending on which one went first. In the last two, A is added last, after both of the others are already in place, and it is worth 6 both times.</p>
+<p>Read down the highlighted numbers: 4, 4, 6, 4, 6, 6. Average them and you get 5.</p>
+<p>The idea behind that average is worth stating plainly, because it is the core idea of SHAP: consider every possible order in which the features could enter the model’s explanation. Each time feature A enters, record how much the model’s output changes. Then average those recorded changes over all possible orders. Do the same bookkeeping for B and for C, and their averages come out to 3 and 1. Three numbers, one for each feature, and together they add up to exactly the nine units separating the baseline from the prediction: 5 plus 3 plus 1 is 9.</p>
+<p>This averaged, order-respecting contribution is what the rest of the course calls a feature’s Shapley value, and the assignment of one such number to every feature is what SHAP computes. The name will not matter until the mathematics chapter, where this averaging is written out formally and the weight given to each order is derived rather than assumed.</p>
+</section>
+<section id="the-baseline" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="the-baseline"><span class="header-section-number">1.5</span> The baseline</h2>
+<p>The baseline in <a href="#fig-baseline-to-prediction" class="quarto-xref">Figure&nbsp;<span>1.1</span></a> was quietly set to 10 and left there. It deserves more attention, because it is the single most common source of confusion about what a SHAP explanation actually says.</p>
+<p>The baseline is not automatically zero. It is not automatically the average of the outcome variable in some dataset you have lying around. Here is what it actually is, in words before any notation: take every observation in a chosen background population, ask the fitted model for its prediction on each one, and average those predictions. The baseline is the average <em>model prediction</em>, not the model’s prediction on the <em>average</em> observation. These are not the same thing, and for a nonlinear model they can differ a great deal. Written compactly, the baseline is <span class="math inline">\(E[f(X)]\)</span>, the expected model output over the background, not <span class="math inline">\(f(E[X])\)</span>, the model output at the background’s average feature values.</p>
+<p>The background, formally, is whatever collection of reference observations you decide represents “typical.” Change that collection, and the baseline changes, even though the model and the observation being explained have not.</p>
+<div class="visual-card">
+<div id="fig-two-backgrounds" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two side-by-side panels. Left panel: general population background, baseline 12.75, prediction 18.70. Right panel: restricted comparison group of older, higher-BMI patients, baseline 18.10, prediction 18.70.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-two-backgrounds-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/06-two-backgrounds.svg" class="img-fluid figure-img" alt="Two side-by-side panels. Left panel: general population background, baseline 12.75, prediction 18.70. Right panel: restricted comparison group of older, higher-BMI patients, baseline 18.10, prediction 18.70.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-two-backgrounds-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.5: The same patient, the same fitted model, and the same final prediction, explained against two different backgrounds.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-two-backgrounds" class="quarto-xref">Figure&nbsp;<span>1.5</span></a> makes this concrete with a small clinical example: a patient with age 65, BMI 32, and blood pressure 150, run through the same fitted risk model twice. On the left, the background is a general population sample, and the baseline sits at 12.75, leaving 5.95 units for the features to explain. On the right, the background is a restricted comparison group of older patients with higher BMI, and the baseline rises to 18.10, leaving only 0.60. The patient’s risk score has not moved. What changed is the population this patient is being compared against, and with it, how much there is left to explain.</p>
+<p>Put in words, the two panels are answering two different questions about the exact same patient. Against the general population, the question is “why is this patient different from a typical patient?” Against the restricted comparison group, the question becomes “why is this patient different from a typical patient in that older, higher-BMI group?” Same model, same patient, same final prediction, and a different baseline and a different set of SHAP values because the comparison question itself changed.</p>
+<p>This is worth stating: <strong>a SHAP explanation is a relative statement</strong>. It explains a model’s prediction relative to a chosen reference distribution, not relative to some absolute zero.</p>
+</section>
+<section id="what-removing-a-feature-actually-means" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="what-removing-a-feature-actually-means"><span class="header-section-number">1.6</span> What “removing” a feature actually means</h2>
+<p>We have used the phrase “retain B and C, remove A” throughout this chapter without saying what the model actually receives when a feature is supposedly removed. Almost every fitted model expects a fixed number of inputs, so there is usually no way to hand it only two of three features and get something meaningful back.</p>
+<p>What happens instead is masking: the retained features keep the values from the observation being explained, and the removed features are filled in using values taken from the background data, one background row at a time. The model is then evaluated on each of these hybrid rows, and the results are averaged.</p>
+<div class="visual-card">
+<div id="fig-masking-table" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A table with four rows. Each row keeps age at 65, copied from the explained patient, and fills BMI and blood pressure from a different background patient. The model's output is computed for each row, and the four outputs are averaged to 14.00.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-masking-table-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/05-background-masking-table.svg" class="img-fluid figure-img" alt="A table with four rows. Each row keeps age at 65, copied from the explained patient, and fills BMI and blood pressure from a different background patient. The model's output is computed for each row, and the four outputs are averaged to 14.00.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-masking-table-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.6: Building four hybrid rows to estimate the model’s value when only age is retained. Age is copied from the patient being explained. BMI and blood pressure are copied from four background patients, one row at a time.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-masking-table" class="quarto-xref">Figure&nbsp;<span>1.6</span></a> works through this for a single feature, age, on the same patient as before. Age is held fixed at 65 throughout, shown in the color used for values taken from the observation being explained. BMI and blood pressure are filled in from four background patients in turn, the same general-population background used for the left panel of <a href="#fig-two-backgrounds" class="quarto-xref">Figure&nbsp;<span>1.5</span></a>, shown in the color used for values taken from the background. Each of the four resulting hybrid rows, none of which is a real patient, gets fed through the model, and the four outputs are averaged to get one number: 14.00. That average is the model’s value for the coalition “age retained, everything else removed,” the same kind of quantity shown at every node of <a href="#fig-coalition-lattice" class="quarto-xref">Figure&nbsp;<span>1.2</span></a>.</p>
+<p>Every value in that lattice, and every contribution built from it, is computed this way: fix the retained features at the explained observation’s values, fill the rest from the background, evaluate, and average over background rows. There is no retraining and no literal deletion of an input. There is only substitution and averaging.</p>
+<p>This particular way of filling in missing values, replacing them from the general background without asking whether the result looks like a plausible patient, is often called <strong>marginal SHAP</strong>. (Some SHAP software and papers call the same thing “interventional,” a term that will come back in the practice chapter. The name matters less right now than the mechanism.) An alternative, briefly worth knowing about, is <strong>conditional SHAP</strong>, which instead asks what values of the missing features would be plausible given the features already known, rather than drawing them from the background population as a whole. If age 80 is the retained value, marginal SHAP is willing to combine it with a BMI value taken from anyone in the background, including people much younger. Conditional SHAP would instead try to use BMI values that are plausible for people around age 80. This course uses marginal SHAP throughout, and comes back to why that choice matters later in this chapter.</p>
+</section>
+<section id="local-explanations-the-waterfall-plot" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="local-explanations-the-waterfall-plot"><span class="header-section-number">1.7</span> Local explanations: the waterfall plot</h2>
+<p>Once a Shapley value has been computed for every feature of one observation, there is a natural way to display them together.</p>
+<div class="visual-card">
+<div id="fig-waterfall" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A waterfall chart with four horizontal rows, feature values labeled on the left (x3=2.582, x1=-0.106, x2=0.668, x4=0.536) and a SHAP value inside each bar (-1.05, -0.89, +0.83, +0.01). The baseline E[f(X)]=4.996 is marked at the bottom axis. Reading from the bottom row upward, each bar shifts the running total left or right, ending at f(x)=3.9 at the top.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-waterfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/07-waterfall-example.png" class="img-fluid figure-img" alt="A waterfall chart with four horizontal rows, feature values labeled on the left (x3=2.582, x1=-0.106, x2=0.668, x4=0.536) and a SHAP value inside each bar (-1.05, -0.89, +0.83, +0.01). The baseline E[f(X)]=4.996 is marked at the bottom axis. Reading from the bottom row upward, each bar shifts the running total left or right, ending at f(x)=3.9 at the top.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-waterfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.7: A waterfall plot for one observation. Starting from the baseline at the bottom, each feature’s SHAP value shifts the running prediction left or right until the top row reaches the model’s actual output.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-waterfall" class="quarto-xref">Figure&nbsp;<span>1.7</span></a> is read from the bottom row upward, not left to right. Two different numbers appear on this plot, and it matters that you do not confuse them. On the left, in gray, are the observed <strong>feature values</strong> for this one patient: x3 was 2.582, x1 was <span class="math inline">\(-0.106\)</span>, x2 was 0.668, x4 was 0.536. Inside each colored bar is a different number, that feature’s <strong>SHAP value</strong> for this observation: how much it contributed, not what it measured.</p>
+<p>Start at the bottom. The baseline, <span class="math inline">\(E[f(X)] = 4.996\)</span>, is marked on the axis. The bottom row, x4, has a SHAP value of <span class="math inline">\(+0.01\)</span>, so the running total moves from 4.996 to 5.006. The next row up, x2, has a SHAP value of <span class="math inline">\(+0.83\)</span>, moving the running total from 5.006 to 5.836. The next row, x1, has a SHAP value of <span class="math inline">\(-0.89\)</span>, moving the running total from 5.836 down to 4.946. The top row, x3, has a SHAP value of <span class="math inline">\(-1.05\)</span>, moving the running total from 4.946 down to 3.9, which is exactly the model’s actual prediction for this patient, <span class="math inline">\(f(x) = 3.9\)</span>.</p>
+<p>Notice that x1’s bar happens to land close to the baseline, at 4.946 against a baseline of 4.996. It is tempting to read something into that, as if x1’s bar were “pointing back toward the baseline.” It is not. The bar simply starts wherever the running total already was, 5.836, and subtracts 0.89. That it lands near 4.996 is a coincidence of this particular observation’s numbers, not a rule about how the plot works. Every bar behaves the same way: it starts where the previous row left the running total, and moves by exactly that row’s SHAP value.</p>
+<p>Color carries the direction of that movement. A red bar is a positive SHAP value, moving the running total to the right, toward a higher prediction. A blue bar is a negative SHAP value, moving the running total to the left, toward a lower prediction. Color says nothing here about whether the feature’s own value was high or low, only about which direction that feature pushed the prediction for this specific patient given everything else already accounted for.</p>
+<p>Two things are worth noticing immediately, because they recur throughout the rest of the course. First, a SHAP value belongs to one feature and one observation at the same time. It is not a general statement about that feature. A different observation, with different feature values, would get a different waterfall, and a feature that pushes the prediction up for one observation can easily push it down for another. Second, the bars add up exactly: baseline plus every SHAP value equals the prediction, with nothing left over. This identity is exact for the kind of calculation shown here. Some faster, approximate ways of computing SHAP values, used when exact calculation is too expensive, can leave a tiny numerical gap unless the software specifically corrects for it, a point the practice chapter returns to.</p>
+</section>
+<section id="from-one-explanation-to-many" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="from-one-explanation-to-many"><span class="header-section-number">1.8</span> From one explanation to many</h2>
+<p>A single waterfall plot explains a single prediction. Most of the time, the more interesting question is what a model does across many observations at once: which features tend to matter, and in what direction, across an entire dataset.</p>
+<p>The obvious first move, averaging the raw SHAP values of a feature across many observations, usually fails in an unhelpful way. A feature that pushes the prediction up for half the observations and down for the other half by similar amounts will average out to nearly zero, even though it clearly affects individual predictions a great deal. What is normally wanted instead is the average of the <em>absolute</em> SHAP value, which cannot cancel itself out.</p>
+<div class="visual-card">
+<div id="fig-bar-importance" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Horizontal bar chart with four features. x1 has the longest bar at 3.13, followed by x3 at 1.65, x2 at 1.28, and x4 close to zero at 0.07.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bar-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/08-bar-importance.png" class="img-fluid figure-img" alt="Horizontal bar chart with four features. x1 has the longest bar at 3.13, followed by x3 at 1.65, x2 at 1.28, and x4 close to zero at 0.07.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bar-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.8: Average absolute SHAP value for each feature, across many observations, ranked from most to least influential.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-bar-importance" class="quarto-xref">Figure&nbsp;<span>1.8</span></a> shows this for a model trained on four features, named x1 through x4, on data where the true structure is known in advance. You will build this exact model yourself in the next chapter. x1 has by far the largest average absolute SHAP value, x3 and x2 are moderate, and x4 sits almost at zero. Because this is simulated data, we know that x4 has no genuine effect in the data-generating process. Its near-zero mean absolute SHAP value shows that the fitted model has learned to rely very little on x4. SHAP is reporting what the model does, not confirming some independent fact about the world. Here, conveniently, we happen to know both agree.</p>
+</section>
+<section id="the-beeswarm-plot" class="level2" data-number="1.9">
+<h2 data-number="1.9" class="anchored" data-anchor-id="the-beeswarm-plot"><span class="header-section-number">1.9</span> The beeswarm plot</h2>
+<p>A bar chart of averages is useful but throws away a lot of information: every individual observation’s SHAP value for a feature gets collapsed into a single number. The beeswarm plot keeps the individual values visible.</p>
+<div class="visual-card">
+<div id="fig-beeswarm" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four rows of colored dots. x1's row spans widely from strongly negative (blue, low feature value) to strongly positive (red, high feature value). x3's row is narrower with a mixed color pattern. x2's row is intermediate. x4's row is a tight cluster near zero.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-beeswarm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/09-beeswarm.png" class="img-fluid figure-img" alt="Four rows of colored dots. x1's row spans widely from strongly negative (blue, low feature value) to strongly positive (red, high feature value). x3's row is narrower with a mixed color pattern. x2's row is intermediate. x4's row is a tight cluster near zero.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-beeswarm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.9: A beeswarm plot. Each row is a feature, each dot is one observation, horizontal position is that observation’s SHAP value, and color is the observed feature value.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Every element of <a href="#fig-beeswarm" class="quarto-xref">Figure&nbsp;<span>1.9</span></a> carries meaning. Each row is one feature, ordered from most to least influential by the same average absolute SHAP value as the bar chart. Within a row, each dot is one observation, and its horizontal position is that observation’s SHAP value for this feature: how much that feature pushed that observation’s prediction up or down. Color encodes the observed value of the feature itself, not the SHAP value, running from low (blue) to high (red) on whatever scale that feature was measured on.</p>
+<p>Two different things can be read from a row, and it is worth keeping them separate. Horizontal spread, how far left and right the dots reach, shows how much that feature’s contribution varies across observations: a feature that can swing a prediction by a large amount for some observations and barely at all for others will have a wide row. Vertical stacking, how many dots pile up around one horizontal position, shows how many observations share a similar SHAP value there: a thick band means many observations were affected in a similar way at that point, not that those observations are somehow more important.</p>
+<p>Read x1’s row and a pattern appears: low values of x1 (blue) tend to sit on the negative side, high values (red) tend to sit on the positive side. This suggests that the fitted model has learned a roughly monotonic relationship for x1, a feature whose effect tends to move in one direction as the feature itself increases, though the dependence plot in the next section shows this kind of relationship far more precisely than a beeswarm row can. Read x3’s row and the colors are mixed together across the width of the band rather than sorted from one end to the other, a sign that x3’s relationship with its own SHAP value is not simply increasing or decreasing. x4 barely spreads out at all, consistent with it having little effect.</p>
+<p>Be careful not to over-generalize the color pairing. In x1’s row, blue (low values) happens to sit on the negative side and red (high values) on the positive side, but this pairing is a property of how this particular feature affects this particular model, not a rule about SHAP itself. A different feature in a different model could just as easily show red points sitting on the <em>negative</em> side, meaning that high values of that feature push the prediction down. Color always means the same thing, the observed feature value, but which side of zero that color lands on is something you have to read off the plot each time, not assume in advance.</p>
+</section>
+<section id="the-dependence-plot" class="level2" data-number="1.10">
+<h2 data-number="1.10" class="anchored" data-anchor-id="the-dependence-plot"><span class="header-section-number">1.10</span> The dependence plot</h2>
+<p>The beeswarm plot hints at whether a feature’s effect is monotonic or not, but a dedicated dependence plot shows the relationship directly, with the observed feature value on the horizontal axis and that feature’s SHAP value on the vertical axis.</p>
+<div class="visual-card">
+<div id="fig-dependence-patterns" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Three scatter plots side by side. Left: SHAP value rises steadily and roughly linearly with the feature. Middle: SHAP value jumps sharply from about -2 to about +2 near feature value zero, and is flat on either side. Right: SHAP value is high for very negative and very positive feature values and dips to a minimum near zero, forming a U shape.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dependence-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/10-dependence-patterns.png" class="img-fluid figure-img" alt="Three scatter plots side by side. Left: SHAP value rises steadily and roughly linearly with the feature. Middle: SHAP value jumps sharply from about -2 to about +2 near feature value zero, and is flat on either side. Right: SHAP value is high for very negative and very positive feature values and dips to a minimum near zero, forming a U shape.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dependence-patterns-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.10: Three dependence plots, each showing a different relationship between a feature’s value and its SHAP value.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-dependence-patterns" class="quarto-xref">Figure&nbsp;<span>1.10</span></a> shows three of the shapes this relationship commonly takes, each from a fitted model. On the left, the SHAP value rises steadily as the feature increases: a roughly linear relationship, the simplest case. In the middle, the SHAP value is flat and low below a threshold, flat and high above it, with a sharp jump at the threshold itself: the model has effectively learned a cutoff. On the right, the SHAP value is high at both extremes of the feature and dips in the middle, a U-shaped relationship. Reading it in words: low values of this feature push the prediction up, middle values push it down (or push it up only weakly), and high values push it up again. Both extremes move the prediction in the same direction relative to the baseline, while the middle range does not, something no single “the effect of this feature is positive” or “negative” statement could describe correctly. As with every SHAP plot in this chapter, this describes how the fitted model responds to the feature. It is not, by itself, evidence for what would happen in reality if that feature’s value were deliberately changed.</p>
+<p>A dependence plot can reveal exactly this kind of relationship even when the underlying model is a black box, because it is reading the model’s behavior back out through the SHAP values rather than assuming a shape in advance.</p>
+<p>In all three examples so far, we have mainly looked at how a feature’s own value relates to its own SHAP value, one dot moving along one curve. But what if two observations have almost the same feature value, and still end up with very different SHAP values? That question is what the next section is about.</p>
+</section>
+<section id="interactions" class="level2" data-number="1.11">
+<h2 data-number="1.11" class="anchored" data-anchor-id="interactions"><span class="header-section-number">1.11</span> Interactions</h2>
+<p>Start from the simplest possible idea, before any terminology: the effect of one feature may depend on the value of another feature.</p>
+<p>Suppose a model predicts a risk score from, among other features, x1 and x2. Two real patients in our test data both have very similar x2 values, close to 1. One of them, with x1 around <span class="math inline">\(-1.8\)</span>, gets a SHAP value for x2 of about <span class="math inline">\(-0.15\)</span>. The other, with x1 around <span class="math inline">\(1.3\)</span>, gets a SHAP value for x2 of about <span class="math inline">\(+3.35\)</span>.</p>
+<p>Ask the obvious question: if x2 has essentially the same value in both patients, why did x2 contribute barely anything for one of them and a large positive amount for the other? The value of x2 did not change between the two patients. What changed was x1. The model is therefore using x2 differently depending on what x1 was. This is what we mean by an <strong>interaction in the fitted model</strong>: the contribution of one feature depends on the value of another. It describes a property of the fitted model’s behavior, not necessarily anything about biology or cause and effect in the real world.</p>
+<p>The same two patients, and everyone else in the test set, appear in the plot below.</p>
+<div class="visual-card">
+<div id="fig-dependence-interaction" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of SHAP value for x2 against x2, colored by x1 from blue (low) to red (high). Points with high x1 (red) sit well above points with low x1 (blue) even at the same x2 value, and the slope of the relationship itself looks steeper among red points.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dependence-interaction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/11-dependence-interaction-spread.png" class="img-fluid figure-img" alt="Scatter plot of SHAP value for x2 against x2, colored by x1 from blue (low) to red (high). Points with high x1 (red) sit well above points with low x1 (blue) even at the same x2 value, and the slope of the relationship itself looks steeper among red points.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dependence-interaction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.11: The SHAP value for x2 against x2’s own observed value, colored by x1. At any fixed value of x2, the vertical spread lines up with x1.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Read the axes carefully before reading the pattern. The horizontal position of a point tells us the value of x2 for that observation. The vertical position tells us how much x2 contributed to that observation’s prediction, its SHAP value for x2. The color of the point tells us the value of x1 for that same observation, from blue (low x1) to red (high x1).</p>
+<p>Look at a single vertical slice of the plot, say around x2 = 1. The points there are not all the same height. Some sit low, some sit high, and this is the vertical spread the question above was pointing at. On its own, vertical spread at one x2 value means this: if many observations share almost the same x2 value but have noticeably different SHAP values for x2, then x2’s value alone cannot explain why its contribution differs across them. Something else must be changing how the model uses x2. That alone is a clue that x2 may be interacting with another feature, not proof of which feature it is.</p>
+<p>This is where the coloring earns its place. If the points with high x1 (red) consistently sit above the points with low x1 (blue), even when their x2 values are similar, x1 becomes a strong candidate for the feature that is changing x2’s effect. That is exactly the pattern in <a href="#fig-dependence-interaction" class="quarto-xref">Figure&nbsp;<span>1.11</span></a>: at almost every x2 value, red points sit above blue points, and the upward slope even looks steeper among the red points than among the blue ones. Coloring by x1 turned “something is going on” into “x1 looks like the reason.”</p>
+<p>It is worth being careful about exactly what this plot does and does not show. Vertical spread by itself does not prove an interaction with whichever feature was used for coloring. It is evidence of context dependence, a sign that x2’s contribution is not fixed. Coloring by a candidate feature and seeing the spread line up with it is what turns that evidence into a specific, testable suggestion about which feature is involved.</p>
+<p>There are formal SHAP interaction values that split a feature’s contribution into a main effect and a set of pairwise interaction terms with every other feature, computed directly rather than read off a colored scatter plot. They belong in a later chapter. Here, the goal is only to recognize what an interaction looks like visually and to reason about it carefully.</p>
+<p><strong>Interaction is not the same idea as correlation</strong>, and it is worth keeping the two apart. Correlation means two features tend to take related values in the data: older patients may tend to have higher blood pressure, for instance, a statement about how the features are distributed. Interaction means the fitted model uses one feature differently depending on the value of another: the model might treat BMI as a much stronger driver of risk for older patients than for younger ones, a statement about how the model behaves. A dataset can have correlated features whose effects do not interact at all, and a model can show a strong interaction between two features that are not correlated in the data in any way.</p>
+</section>
+<section id="when-shap-is-a-good-choice" class="level2" data-number="1.12">
+<h2 data-number="1.12" class="anchored" data-anchor-id="when-shap-is-a-good-choice"><span class="header-section-number">1.12</span> When SHAP is a good choice</h2>
+<p>SHAP is worth reaching for when the question is about a fitted model’s behavior rather than about the data on its own. It is well suited to explaining why one specific prediction came out the way it did, to comparing what drove two different predictions from the same model, to inspecting whether a model has learned a linear, threshold, or more complicated relationship for a given feature, to finding interactions between features, to studying whether a model behaves consistently across different subgroups of observations, and to giving both a per-observation and an across-the-dataset view of a model’s behavior using the same underlying numbers.</p>
+</section>
+<section id="when-shap-should-be-interpreted-carefully" class="level2" data-number="1.13">
+<h2 data-number="1.13" class="anchored" data-anchor-id="when-shap-should-be-interpreted-carefully"><span class="header-section-number">1.13</span> When SHAP should be interpreted carefully</h2>
+<p>A handful of situations can make a SHAP explanation misleading if they are not kept in mind.</p>
+<p><strong>Correlated features.</strong> The masking mechanism described earlier fills a removed feature’s value from the background, without conditioning on the retained feature values. Suppose the patient being explained has age 80 and BMI 31, and one background patient has age 25 and BMI 20. If age is retained and BMI is masked, marginal SHAP is willing to construct the hybrid combination age 80, BMI 20, simply because that background patient’s BMI was available, not because that combination is realistic. The problem is not that BMI was sampled incorrectly on its own. It is that BMI was sampled without any regard for the fact that age was fixed at 80. When several features are masked at once and happen to come from the <em>same</em> background row, as in <a href="#fig-masking-table" class="quarto-xref">Figure&nbsp;<span>1.6</span></a>, their relationships with each other are preserved. It is specifically their relationship with the retained feature that marginal masking ignores.</p>
+<div class="visual-card">
+<div id="fig-correlated-hybrids" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of two correlated variables forming a narrow diagonal band. A star marks one observation with a high value on both variables. Square markers, built by keeping that observation's first variable fixed and filling the second from background rows, form a vertical line that runs far below the diagonal band.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-correlated-hybrids-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/12-correlated-hybrid-points.svg" class="img-fluid figure-img" alt="Scatter plot of two correlated variables forming a narrow diagonal band. A star marks one observation with a high value on both variables. Square markers, built by keeping that observation's first variable fixed and filling the second from background rows, form a vertical line that runs far below the diagonal band.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-correlated-hybrids-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.12: Observed data for two correlated variables, together with hybrid rows built by masking. Several hybrids fall well outside the region where real observations are found.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-correlated-hybrids" class="quarto-xref">Figure&nbsp;<span>1.12</span></a> shows this with two correlated variables: an observation with a high value on both, marked with a star, and the hybrid rows built while computing that observation’s SHAP value for the first variable alone. Those hybrids, marked with squares, keep the high value of the first variable but borrow the second variable from background rows without regard to the correlation between the two, so several of them land well below the narrow diagonal band where real data actually falls. The model is being asked to make predictions for combinations of values it may never have seen during training, and the resulting SHAP values inherit that extrapolation. Later chapters return to this problem directly and cover conditional and grouped alternatives to the masking used here, each answering a related but different question.</p>
+<p><strong>A poorly chosen background.</strong> <a href="#fig-two-backgrounds" class="quarto-xref">Figure&nbsp;<span>1.5</span></a> already showed that the background changes both the baseline and the size of what needs explaining. A background that does not represent a sensible comparison group will produce a technically correct but practically confusing explanation.</p>
+<p><strong>Unstable models.</strong> If small changes to the training data would have produced a noticeably different model, that model’s SHAP values inherit the same instability, and should not be read as more precise than the underlying fit actually is.</p>
+<p><strong>One-hot encoded variables.</strong> A single categorical feature that has been split into several 0/1 columns will have its SHAP attribution split across those columns too, even though the columns represent one underlying quantity. For example, a “color” feature with values red, blue, and green is commonly encoded as three separate columns, <code>color_red</code>, <code>color_blue</code>, and <code>color_green</code>. A blue observation would have <code>color_red = 0</code>, <code>color_blue = 1</code>, <code>color_green = 0</code>, and every one of these three columns can receive its own SHAP value, including the two that are zero. A dummy variable equal to zero does not mean zero contribution: “not red” can itself be information the model uses, and <code>color_red</code> can carry a nonzero SHAP value even for an observation where it equals zero. If the goal is to understand the importance of the original “color” variable as a whole, it is usually more useful to add the three dummy columns’ SHAP contributions back together than to read each one in isolation.</p>
+<p><strong>High dimensionality and computational cost.</strong> The number of possible coalitions grows very quickly with the number of features, and computing exact Shapley values grows with it. The mathematics chapter covers this growth directly and the algorithms built to work around it.</p>
+<p><strong>Classification output scale.</strong> The SHAP calculation itself is not fundamentally different for a classifier than for a regression model. What changes is what is being explained: a regression model’s SHAP values explain a predicted numeric outcome, while a classifier’s SHAP values explain a probability, a log-odds score, or some other class score, and these are not interchangeable scales. Always state which class’s score is being explained before interpreting a sign. For the “malignant” class, a positive SHAP value means that feature pushed the model’s output toward a higher malignant score or probability, and a negative SHAP value means it pushed away from it. Avoid calling a negative contribution “protective” without immediately making clear that this describes the fitted model’s behavior, not evidence about a real protective effect. Probability is usually the easier scale to interpret, but some software reports the log-odds scale natively instead, and the two scales are not related by simply converting one baseline into the other. A later chapter works through both scales directly with a fitted classifier. For a model with more than two classes, there is typically a separate set of SHAP values for each class, since a feature can push toward one class while pushing away from another.</p>
+<p><strong>Global importance is not automatically scientific importance.</strong> A large average absolute SHAP value says a feature strongly affects this particular model’s output. It is not automatically evidence that the feature is scientifically important, especially if it is correlated with other candidate explanations that could equally well account for the same predictive signal.</p>
+<p><strong>SHAP importance is not permutation importance.</strong> Permutation importance asks how much a model’s predictive performance degrades if a feature’s values are shuffled, destroying its relationship with the outcome. It is a statement about the model’s reliance on a feature for accuracy, measured in aggregate. SHAP asks how much a feature pushed one particular prediction up or down, relative to a chosen baseline. These are different questions, and the two methods can rank the same features differently without either one being wrong.</p>
+<p><strong>Dependence plots are not dose-response curves.</strong> A dependence plot as clean as the ones in <a href="#fig-dependence-patterns" class="quarto-xref">Figure&nbsp;<span>1.10</span></a> shows how a fitted model responded to a feature. It should not, by itself, be read as evidence for what would happen if that feature’s real-world value were deliberately changed.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="Preface">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./practice.html" class="pagination-link" aria-label="Using SHAP in R and Python">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

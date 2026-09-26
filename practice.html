@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.16">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>2&nbsp; Using SHAP in R and Python – SHAP Values</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./mathematics.html" rel="next">
+<link href="./intuition.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2051dbbaa7ae7a279e016470f480e120.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6075faafe157bb2a1f54b1c2b772188f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./practice.html"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">SHAP Values</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">A worked case study</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#which-packages" id="toc-which-packages" class="nav-link active" data-scroll-target="#which-packages"><span class="header-section-number">2.1</span> Which packages</a></li>
+  <li><a href="#a-tiny-example-we-can-check-by-hand" id="toc-a-tiny-example-we-can-check-by-hand" class="nav-link" data-scroll-target="#a-tiny-example-we-can-check-by-hand"><span class="header-section-number">2.2</span> A tiny example we can check by hand</a></li>
+  <li><a href="#simulated-data-with-a-known-structure" id="toc-simulated-data-with-a-known-structure" class="nav-link" data-scroll-target="#simulated-data-with-a-known-structure"><span class="header-section-number">2.3</span> Simulated data with a known structure</a></li>
+  <li><a href="#fitting-the-model" id="toc-fitting-the-model" class="nav-link" data-scroll-target="#fitting-the-model"><span class="header-section-number">2.4</span> Fitting the model</a></li>
+  <li><a href="#computing-shap-values" id="toc-computing-shap-values" class="nav-link" data-scroll-target="#computing-shap-values"><span class="header-section-number">2.5</span> Computing SHAP values</a></li>
+  <li><a href="#checking-additivity" id="toc-checking-additivity" class="nav-link" data-scroll-target="#checking-additivity"><span class="header-section-number">2.6</span> Checking additivity</a></li>
+  <li><a href="#reading-a-waterfall-plot" id="toc-reading-a-waterfall-plot" class="nav-link" data-scroll-target="#reading-a-waterfall-plot"><span class="header-section-number">2.7</span> Reading a waterfall plot</a></li>
+  <li><a href="#global-importance-and-beeswarm-plots" id="toc-global-importance-and-beeswarm-plots" class="nav-link" data-scroll-target="#global-importance-and-beeswarm-plots"><span class="header-section-number">2.8</span> Global importance and beeswarm plots</a></li>
+  <li><a href="#dependence-and-interaction" id="toc-dependence-and-interaction" class="nav-link" data-scroll-target="#dependence-and-interaction"><span class="header-section-number">2.9</span> Dependence and interaction</a></li>
+  <li><a href="#classification-and-the-output-scale" id="toc-classification-and-the-output-scale" class="nav-link" data-scroll-target="#classification-and-the-output-scale"><span class="header-section-number">2.10</span> Classification and the output scale</a>
+  <ul class="collapse">
+  <li><a href="#predicted-probability-computed-from-an-explicit-background" id="toc-predicted-probability-computed-from-an-explicit-background" class="nav-link" data-scroll-target="#predicted-probability-computed-from-an-explicit-background"><span class="header-section-number">2.10.1</span> Predicted probability, computed from an explicit background</a></li>
+  <li><a href="#native-xgboost-shap-uses-the-raw-margin" id="toc-native-xgboost-shap-uses-the-raw-margin" class="nav-link" data-scroll-target="#native-xgboost-shap-uses-the-raw-margin"><span class="header-section-number">2.10.2</span> Native XGBoost SHAP uses the raw margin</a></li>
+  </ul></li>
+  <li><a href="#background-choice" id="toc-background-choice" class="nav-link" data-scroll-target="#background-choice"><span class="header-section-number">2.11</span> Background choice</a></li>
+  <li><a href="#correlated-features-and-masking" id="toc-correlated-features-and-masking" class="nav-link" data-scroll-target="#correlated-features-and-masking"><span class="header-section-number">2.12</span> Correlated features and masking</a></li>
+  <li><a href="#comparing-kernelshap-and-treeshap" id="toc-comparing-kernelshap-and-treeshap" class="nav-link" data-scroll-target="#comparing-kernelshap-and-treeshap"><span class="header-section-number">2.13</span> Comparing KernelSHAP and TreeSHAP</a></li>
+  <li><a href="#a-random-forest-example" id="toc-a-random-forest-example" class="nav-link" data-scroll-target="#a-random-forest-example"><span class="header-section-number">2.14</span> A random forest example</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">2.15</span> Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The previous chapter introduced SHAP visually: a baseline, a coalition, a background, a waterfall plot, and an interaction. This chapter shows how those same ideas appear in real R and Python code, and how to read the objects and plots that the software returns.</p>
+<p>Download the files used throughout this chapter:</p>
+<ul>
+<li><a href="data/shap_sim.csv" download="shap_sim.csv">shap_sim.csv</a>, the main simulated dataset, with a <code>split</code> column shared by both languages</li>
+<li><a href="data/correlated_pair.csv" download="correlated_pair.csv">correlated_pair.csv</a>, the small correlated pair used for the masking section</li>
+</ul>
+<p>Place them in a <code>data</code> folder beside your script or notebook so that the paths in the examples work unchanged.</p>
+<section id="which-packages" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="which-packages"><span class="header-section-number">2.1</span> Which packages</h2>
+<p>R does not have one package that covers every situation, so this chapter uses three.</p>
+<ul>
+<li><strong><code>kernelshap</code></strong> computes SHAP values for any model, given an explicit background dataset and a function that produces predictions from that model. It is model-agnostic: it does not need to know anything about how the model was built.</li>
+<li><strong><code>shapviz</code></strong> stores SHAP values in one object and produces waterfall, bar, beeswarm, and dependence plots from it.</li>
+<li><strong><code>treeshap</code></strong> is used later in the chapter for tree-based models that do not have their own SHAP implementation, such as <code>ranger</code>.</li>
+</ul>
+<p>XGBoost has its own SHAP implementation, so for XGBoost models we can obtain SHAP values directly from the fitted model, without any of the three packages above.</p>
+<p>Python uses one package, <code>shap</code>, throughout. It provides several explainer types for different kinds of models, and picks a suitable one automatically through <code>shap.Explainer</code> when you do not specify one yourself.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Note
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Other packages, such as <code>fastshap</code>, provide Monte Carlo approximations to Shapley values. They are not used in this chapter.</p>
+</div>
+</div>
+</section>
+<section id="a-tiny-example-we-can-check-by-hand" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="a-tiny-example-we-can-check-by-hand"><span class="header-section-number">2.2</span> A tiny example we can check by hand</h2>
+<p>Before applying SHAP to a fitted model, it helps to see it applied to something simpler: a function small enough that the correct answer can be worked out directly. The next chapter derives the same numbers by hand from the definition of a Shapley value. Here, we only compute them in code.</p>
+<p>Define</p>
+<p><span class="math display">\[f(A, B, C) = 10 + 2A + 2B + 2C + AB,\]</span></p>
+<p>use the single point <span class="math inline">\(A=B=C=0\)</span> as the background, and explain the point <span class="math inline">\(A=2, B=1, C=0.5\)</span>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(kernelshap)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>f <span class="ot">&lt;-</span> <span class="cf">function</span>(X) {</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="dv">10</span> <span class="sc">+</span> <span class="dv">2</span><span class="sc">*</span>X[,<span class="st">"A"</span>] <span class="sc">+</span> <span class="dv">2</span><span class="sc">*</span>X[,<span class="st">"B"</span>] <span class="sc">+</span> <span class="dv">2</span><span class="sc">*</span>X[,<span class="st">"C"</span>] <span class="sc">+</span> X[,<span class="st">"A"</span>]<span class="sc">*</span>X[,<span class="st">"B"</span>]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>pred_fun_toy <span class="ot">&lt;-</span> <span class="cf">function</span>(model, X) <span class="fu">f</span>(X)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>bg_toy <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">A =</span> <span class="dv">0</span>, <span class="at">B =</span> <span class="dv">0</span>, <span class="at">C =</span> <span class="dv">0</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>x_toy  <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">A =</span> <span class="dv">2</span>, <span class="at">B =</span> <span class="dv">1</span>, <span class="at">C =</span> <span class="fl">0.5</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>ks_toy <span class="ot">&lt;-</span> <span class="fu">kernelshap</span>(<span class="at">object =</span> <span class="st">"toy"</span>, <span class="at">X =</span> x_toy, <span class="at">bg_X =</span> bg_toy,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>                      <span class="at">pred_fun =</span> pred_fun_toy, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(ks_toy<span class="sc">$</span>S)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"baseline:"</span>, ks_toy<span class="sc">$</span>baseline, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"prediction:"</span>, ks_toy<span class="sc">$</span>predictions, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>     A B C
+[1,] 5 3 1
+baseline: 10
+prediction: 19</code></pre>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shap</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> f(X):</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> np.atleast_2d(X)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    A, B, C <span class="op">=</span> X[:, <span class="dv">0</span>], X[:, <span class="dv">1</span>], X[:, <span class="dv">2</span>]</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="dv">10</span> <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>A <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>B <span class="op">+</span> <span class="dv">2</span><span class="op">*</span>C <span class="op">+</span> <span class="dv">1</span><span class="op">*</span>A<span class="op">*</span>B</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>background <span class="op">=</span> np.array([[<span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>]])</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.array([[<span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="fl">0.5</span>]])</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>explainer <span class="op">=</span> shap.KernelExplainer(f, background)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>shap_values <span class="op">=</span> explainer.shap_values(x, nsamples<span class="op">=</span><span class="st">"auto"</span>, silent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"SHAP values:"</span>, shap_values)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"base value:"</span>, explainer.expected_value)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"model prediction:"</span>, f(x))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>SHAP values: [[5. 3. 1.]]
+base value: 10.0
+model prediction: [19.]</code></pre>
+</div>
+</div>
+</div>
+<p>Both implementations return the same SHAP values: <span class="math inline">\(A = 5\)</span>, <span class="math inline">\(B = 3\)</span>, <span class="math inline">\(C = 1\)</span>. Together with the baseline of 10, they reconstruct the prediction:</p>
+<p><span class="math display">\[10 + 5 + 3 + 1 = 19.\]</span></p>
+<p><code>kernelshap()</code> reports this as an exact computation: with only three features it enumerates every coalition rather than sampling from them. <code>shap.KernelExplainer</code> reaches the same answer with <code>nsamples="auto"</code>, which for three features also amounts to exact enumeration.</p>
+</section>
+<section id="simulated-data-with-a-known-structure" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="simulated-data-with-a-known-structure"><span class="header-section-number">2.3</span> Simulated data with a known structure</h2>
+<p>The rest of this chapter uses a simulated dataset. Because the data are simulated, we know which features enter the equation used to generate the outcome, and how. This lets us compare what the fitted model has learned with the structure that was used to generate the data. It does not mean SHAP recovers that structure directly. SHAP only ever explains the fitted model. Here, we can additionally check whether the model learned something consistent with the mechanism we built.</p>
+<div class="visual-card">
+<div id="fig-simulation-truth" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Four scatter plots of y against x1, x2, x3, and x4. x1 shows a clear increasing trend. x2 shows a weaker increasing trend. x3 shows a noisy cloud with a sinusoidal red curve overlaid. x4 shows no visible relationship.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-simulation-truth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/13-simulation-truth.svg" class="img-fluid figure-img" alt="Four scatter plots of y against x1, x2, x3, and x4. x1 shows a clear increasing trend. x2 shows a weaker increasing trend. x3 shows a noisy cloud with a sinusoidal red curve overlaid. x4 shows no visible relationship.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simulation-truth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: The outcome plotted against each of the four simulated features.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The outcome was generated as</p>
+<p><span class="math display">\[y = 5 + 4x_1 + 1.5x_2 + 2x_1x_2 + 3\sin(1.3x_3) + \varepsilon,\]</span></p>
+<p>with <span class="math inline">\(x_1, x_2, x_4\)</span> drawn from a standard normal distribution, <span class="math inline">\(x_3\)</span> drawn uniformly between <span class="math inline">\(-3\)</span> and <span class="math inline">\(3\)</span>, and <span class="math inline">\(\varepsilon\)</span> independent Gaussian noise added to every observation. Feature by feature:</p>
+<ul>
+<li><strong>x1</strong> has a strong linear effect on <span class="math inline">\(y\)</span>.</li>
+<li><strong>x2</strong> has a smaller linear effect, and also appears in the interaction term <span class="math inline">\(2x_1x_2\)</span>.</li>
+<li><strong>x3</strong> has a nonlinear effect, <span class="math inline">\(3\sin(1.3x_3)\)</span>.</li>
+<li><strong>x4</strong> does not appear in the equation at all. It plays no part in generating <span class="math inline">\(y\)</span>.</li>
+</ul>
+<p><a href="#fig-simulation-truth" class="quarto-xref">Figure&nbsp;<span>2.1</span></a> plots <span class="math inline">\(y\)</span> against each feature on its own. x1’s effect is visible directly, because it is the dominant term. x3’s effect is harder to see in the raw scatter, because <span class="math inline">\(y\)</span> also depends strongly on x1 and x2, and the plot does not hold those fixed. The true <span class="math inline">\(x_3\)</span> component, <span class="math inline">\(3\sin(1.3x_3)\)</span>, is drawn on top of the points so that the shape is visible despite this.</p>
+<p>A companion binary outcome, used later in the chapter, is generated from the same signal through a logistic function, so the same four features matter for classification in the same way they matter for regression.</p>
+<p>The dataset is simulated once, with a fixed seed, and saved to <code>data/shap_sim.csv</code>. A <code>split</code> column is generated once and stored in the file, so that R and Python train and test on exactly the same rows without depending on their random number generators producing the same sequence.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sim <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/shap_sim.csv"</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>feature_cols <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"x1"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span>, <span class="st">"x4"</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>train <span class="ot">&lt;-</span> sim[sim<span class="sc">$</span>split <span class="sc">==</span> <span class="st">"train"</span>, ]</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>test  <span class="ot">&lt;-</span> sim[sim<span class="sc">$</span>split <span class="sc">==</span> <span class="st">"test"</span>, ]</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">dim</span>(sim), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">nrow</span>(train), <span class="fu">nrow</span>(test), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(sim, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>4000 8
+3001 999
+         x1         x2         x3           x4         y y_class prob_true split
+1 1.5778694 -0.1671370  0.4567377 -0.006211355 13.742766       1 0.8042561 train
+2 1.1786727 -0.9833237  0.1771062  1.231445144  3.193947       0 0.5774059 train
+3 0.3105099 -0.6072354 -1.0696451  0.247771042  2.720831       0 0.3561608  test</code></pre>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>sim <span class="op">=</span> pd.read_csv(<span class="st">"data/shap_sim.csv"</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>feature_cols <span class="op">=</span> [<span class="st">"x1"</span>, <span class="st">"x2"</span>, <span class="st">"x3"</span>, <span class="st">"x4"</span>]</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>train <span class="op">=</span> sim[sim.split <span class="op">==</span> <span class="st">"train"</span>].reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>test <span class="op">=</span> sim[sim.split <span class="op">==</span> <span class="st">"test"</span>].reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sim.shape)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(train.shape, test.shape)</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(sim.head(<span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>(4000, 8)
+(3001, 8) (999, 8)
+         x1        x2        x3        x4          y  y_class  prob_true  split
+0  1.577869 -0.167137  0.456738 -0.006211  13.742766        1   0.804256  train
+1  1.178673 -0.983324  0.177106  1.231445   3.193947        0   0.577406  train
+2  0.310510 -0.607235 -1.069645  0.247771   2.720831        0   0.356161   test</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="fitting-the-model" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="fitting-the-model"><span class="header-section-number">2.4</span> Fitting the model</h2>
+<p>We fit an XGBoost regression model. It can represent linear effects, the nonlinear effect on x3, and the interaction between x1 and x2, and both R and Python give it direct access to SHAP values.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xgboost)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>dtrain <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> <span class="fu">as.matrix</span>(train[, feature_cols]), <span class="at">label =</span> train<span class="sc">$</span>y)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>fit_reg <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">params =</span> <span class="fu">list</span>(<span class="at">max_depth =</span> <span class="dv">3</span>, <span class="at">eta =</span> <span class="fl">0.05</span>, <span class="at">objective =</span> <span class="st">"reg:squarederror"</span>),</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dtrain, <span class="at">nrounds =</span> <span class="dv">300</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_reg, <span class="fu">as.matrix</span>(test[, feature_cols]))</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>r2 <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>((test<span class="sc">$</span>y <span class="sc">-</span> pred)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">sum</span>((test<span class="sc">$</span>y <span class="sc">-</span> <span class="fu">mean</span>(test<span class="sc">$</span>y))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"R2 on the test set:"</span>, <span class="fu">round</span>(r2, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>R2 on the test set: 0.8793</code></pre>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> xgboost <span class="im">as</span> xgb</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> r2_score</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>reg <span class="op">=</span> xgb.XGBRegressor(n_estimators<span class="op">=</span><span class="dv">300</span>, max_depth<span class="op">=</span><span class="dv">3</span>, learning_rate<span class="op">=</span><span class="fl">0.05</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>reg.fit(train[feature_cols], train[<span class="st">"y"</span>])</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>pred <span class="op">=</span> reg.predict(test[feature_cols])</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"R2 on the test set:"</span>, <span class="bu">round</span>(r2_score(test[<span class="st">"y"</span>], pred), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>R2 on the test set: 0.8793</code></pre>
+</div>
+</div>
+</div>
+<p>Before interpreting a model with SHAP, we first check that it predicts reasonably well. An explanation of a poorly fitting model mostly describes noise. R² is 0.88 in both languages here. Both models use the same tree depth, learning rate, and number of rounds, with no random subsampling, so both build the same sequence of trees from the same data.</p>
+</section>
+<section id="computing-shap-values" class="level2" data-number="2.5">
+<h2 data-number="2.5" class="anchored" data-anchor-id="computing-shap-values"><span class="header-section-number">2.5</span> Computing SHAP values</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(shapviz)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>shp <span class="ot">&lt;-</span> <span class="fu">shapviz</span>(fit_reg, <span class="at">X_pred =</span> <span class="fu">as.matrix</span>(test[, feature_cols]), <span class="at">X =</span> test[, feature_cols])</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"dim(S):"</span>, <span class="fu">dim</span>(shp<span class="sc">$</span>S), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"baseline:"</span>, <span class="fu">round</span>(shp<span class="sc">$</span>baseline, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">SHAP values for observation 1:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(shp<span class="sc">$</span>S[<span class="dv">1</span>, ], <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>dim(S): 999 4
+baseline: 4.996
+
+SHAP values for observation 1:
+     x1      x2      x3      x4
+ 1.2132 -1.2344 -2.9200  0.0446</code></pre>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>explainer_reg <span class="op">=</span> shap.TreeExplainer(reg)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>explanation <span class="op">=</span> explainer_reg(test[feature_cols])</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"shape of .values:"</span>, explanation.values.shape)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"base value:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(explanation.base_values[<span class="dv">0</span>]), <span class="dv">4</span>))</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>row <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">SHAP values for observation 0:"</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, val <span class="kw">in</span> <span class="bu">zip</span>(feature_cols, explanation.values[row]):</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>val<span class="sc">:+.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>shape of .values: (999, 4)
+base value: 4.996
+
+SHAP values for observation 0:
+  x1: +1.2132
+  x2: -1.2344
+  x3: -2.9200
+  x4: +0.0446</code></pre>
+</div>
+</div>
+</div>
+<p><code>shp$S</code> in R and <code>explanation.values</code> in Python are both a matrix with 999 rows, one for each test observation, and 4 columns, one for each feature. Each cell is the contribution of one feature to one observation’s prediction. <code>shp$S[1, "x1"]</code> (equivalently, <code>explanation.values[0, 0]</code> in Python) is the contribution of x1 to the prediction for the first test observation, <span class="math inline">\(+1.2132\)</span>.</p>
+<p>The baseline, 4.996, was computed without supplying an explicit background dataset to either function. In that situation both <code>shapviz()</code> (through XGBoost’s own SHAP support) and <code>shap.TreeExplainer()</code> fall back to a calculation that uses the training data captured inside the fitted trees, rather than an explicit background sample of rows. This is not the same background mechanism as the marginal, explicit-background masking from the previous chapter. Later in this chapter, once an explicit background is supplied, the two mechanisms are compared directly.</p>
+</section>
+<section id="checking-additivity" class="level2" data-number="2.6">
+<h2 data-number="2.6" class="anchored" data-anchor-id="checking-additivity"><span class="header-section-number">2.6</span> Checking additivity</h2>
+<p>The SHAP values for one observation should reconstruct that observation’s prediction, apart from small numerical differences introduced by the computation:</p>
+<p><span class="math display">\[\text{prediction} \approx \text{baseline} + \sum_j \text{SHAP}_j.\]</span></p>
+<p>The code below takes the baseline, adds each row’s SHAP values, and compares the result with the model’s own prediction.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>reconstructed <span class="ot">&lt;-</span> shp<span class="sc">$</span>baseline <span class="sc">+</span> <span class="fu">rowSums</span>(shp<span class="sc">$</span>S)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"max abs difference, reconstructed vs predict():"</span>, <span class="fu">max</span>(<span class="fu">abs</span>(reconstructed <span class="sc">-</span> pred)), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>max abs difference, reconstructed vs predict(): 2.204627e-05</code></pre>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>reconstructed <span class="op">=</span> explanation.base_values <span class="op">+</span> explanation.values.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>direct_pred <span class="op">=</span> reg.predict(test[feature_cols])</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"max abs difference, reconstructed vs model.predict:"</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>      <span class="bu">round</span>(<span class="bu">float</span>(np.<span class="bu">max</span>(np.<span class="bu">abs</span>(reconstructed <span class="op">-</span> direct_pred))), <span class="dv">8</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>max abs difference, reconstructed vs model.predict: 2.098e-05</code></pre>
+</div>
+</div>
+</div>
+<p>The largest difference, across all 999 test observations, is about <span class="math inline">\(2 \times 10^{-5}\)</span> in both languages. That is negligible here, and comes from floating-point arithmetic during the tree computation rather than from any gap in the method.</p>
+</section>
+<section id="reading-a-waterfall-plot" class="level2" data-number="2.7">
+<h2 data-number="2.7" class="anchored" data-anchor-id="reading-a-waterfall-plot"><span class="header-section-number">2.7</span> Reading a waterfall plot</h2>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sv_waterfall</span>(shp, <span class="at">row_id =</span> <span class="dv">7</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>shap.plots.waterfall(explanation[<span class="dv">6</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-practice-waterfall" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Waterfall chart with four rows, feature values labeled on the left (x3=2.582, x1=-0.106, x2=0.668, x4=0.536) and a SHAP value inside each bar (-1.05, -0.89, +0.83, +0.01). The baseline E[f(X)]=4.996 is marked at the bottom axis. Reading from the bottom row upward, each bar shifts the running total left or right, ending at f(x)=3.9 at the top.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-waterfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/07-waterfall-example.png" class="img-fluid figure-img" alt="Waterfall chart with four rows, feature values labeled on the left (x3=2.582, x1=-0.106, x2=0.668, x4=0.536) and a SHAP value inside each bar (-1.05, -0.89, +0.83, +0.01). The baseline E[f(X)]=4.996 is marked at the bottom axis. Reading from the bottom row upward, each bar shifts the running total left or right, ending at f(x)=3.9 at the top.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-practice-waterfall-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Waterfall plot for one test observation.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>This is the same kind of plot introduced in the previous chapter, now for a specific test observation. Two different numbers appear on it. On the left, in gray, are the observed feature values for this observation: x3 is 2.582, x1 is <span class="math inline">\(-0.106\)</span>, x2 is 0.668, x4 is 0.536. Inside each bar is a different number, that feature’s SHAP value: <span class="math inline">\(-1.05\)</span> for x3, <span class="math inline">\(-0.89\)</span> for x1, <span class="math inline">\(+0.83\)</span> for x2, <span class="math inline">\(+0.01\)</span> for x4.</p>
+<p>Read the plot from the bottom row upward. The baseline, <span class="math inline">\(E[f(X)] = 4.996\)</span>, is marked on the axis. x4’s SHAP value, <span class="math inline">\(+0.01\)</span>, moves the running total to <span class="math inline">\(5.006\)</span>. x2’s SHAP value, <span class="math inline">\(+0.83\)</span>, moves it to <span class="math inline">\(5.836\)</span>. x1’s SHAP value, <span class="math inline">\(-0.89\)</span>, moves it to <span class="math inline">\(4.946\)</span>. x3’s SHAP value, <span class="math inline">\(-1.05\)</span>, moves it to <span class="math inline">\(3.9\)</span>, the model’s actual prediction for this observation. A red bar is a positive SHAP value and moves the running total to the right. A blue bar is a negative SHAP value and moves it to the left. Color here says nothing about whether the feature’s own value was high or low, only which direction it pushed the prediction.</p>
+<p>For this observation, x1 and x3 make the largest negative contributions, x2 makes a positive contribution, and x4 contributes very little.</p>
+</section>
+<section id="global-importance-and-beeswarm-plots" class="level2" data-number="2.8">
+<h2 data-number="2.8" class="anchored" data-anchor-id="global-importance-and-beeswarm-plots"><span class="header-section-number">2.8</span> Global importance and beeswarm plots</h2>
+<p>These are the same two plots introduced in the previous chapter, computed here from the fitted XGBoost model.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>mean_abs <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(<span class="fu">abs</span>(shp<span class="sc">$</span>S))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(<span class="fu">sort</span>(mean_abs, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">3</span>))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sv_importance</span>(shp, <span class="at">kind =</span> <span class="st">"bar"</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sv_importance</span>(shp, <span class="at">kind =</span> <span class="st">"beeswarm"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>   x1    x3    x2    x4
+3.132 1.646 1.278 0.066</code></pre>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>mean_abs <span class="op">=</span> np.<span class="bu">abs</span>(explanation.values).mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, val <span class="kw">in</span> <span class="bu">sorted</span>(<span class="bu">zip</span>(feature_cols, mean_abs), key<span class="op">=</span><span class="kw">lambda</span> t: <span class="op">-</span>t[<span class="dv">1</span>]):</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>val<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>shap.plots.bar(explanation)</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>shap.plots.beeswarm(explanation)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>  x1: 3.132
+  x3: 1.646
+  x2: 1.278
+  x4: 0.066</code></pre>
+</div>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-practice-bar" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Horizontal bar chart with four features. x1 has the longest bar at 3.13, followed by x3 at 1.65, x2 at 1.28, and x4 close to zero at 0.07.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-bar-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/08-bar-importance.png" class="img-fluid figure-img" alt="Horizontal bar chart with four features. x1 has the longest bar at 3.13, followed by x3 at 1.65, x2 at 1.28, and x4 close to zero at 0.07.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-practice-bar-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.3: Mean absolute SHAP value per feature (bar), and the distribution of SHAP values per feature across the test set (beeswarm).
+</figcaption>
+</figure>
+</div>
+<div id="fig-practice-beeswarm" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Beeswarm plot with x1's row spanning widely from strongly negative (blue, low feature value) to strongly positive (red, high feature value), x3's row narrower with a mixed color pattern, x2's row intermediate, and x4's row a tight cluster near zero.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-beeswarm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/09-beeswarm.png" id="fig-practice-beeswarm" class="img-fluid figure-img" alt="Beeswarm plot with x1's row spanning widely from strongly negative (blue, low feature value) to strongly positive (red, high feature value), x3's row narrower with a mixed color pattern, x2's row intermediate, and x4's row a tight cluster near zero.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig quarto-uncaptioned" id="fig-practice-beeswarm-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.4
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The bar chart is computed by taking, for each feature, the absolute SHAP value for every test observation and averaging them, <code>mean(abs(SHAP))</code>. Absolute values are used because a feature that pushes some predictions up and others down by similar amounts would otherwise average close to zero, even if it strongly affects individual predictions.</p>
+<p>x1 has the largest mean absolute SHAP value, so the fitted model relies on x1 more than on any other feature across these test observations. x4 is close to zero, so the fitted model makes very little use of x4. This agrees with the data-generating equation, where x4 does not appear at all.</p>
+<p>In the beeswarm plot, the horizontal position of a point is its SHAP value, its color is the observed value of that feature, and each point is one test observation.</p>
+</section>
+<section id="dependence-and-interaction" class="level2" data-number="2.9">
+<h2 data-number="2.9" class="anchored" data-anchor-id="dependence-and-interaction"><span class="header-section-number">2.9</span> Dependence and interaction</h2>
+<p>A dependence plot puts one feature’s observed value on the horizontal axis and its SHAP value on the vertical axis.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sv_dependence</span>(shp, <span class="at">v =</span> <span class="st">"x2"</span>, <span class="at">color_var =</span> <span class="st">"x1"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>shap.plots.scatter(explanation[:, <span class="st">"x2"</span>], color<span class="op">=</span>explanation[:, <span class="st">"x1"</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-practice-dependence" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Scatter plot of SHAP value for x2 against x2, colored by x1 from blue (low) to red (high). Points with high x1 sit well above points with low x1 even at the same x2 value, and the slope of the relationship looks steeper among high-x1 points.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-dependence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/11-dependence-interaction-spread.png" class="img-fluid figure-img" alt="Scatter plot of SHAP value for x2 against x2, colored by x1 from blue (low) to red (high). Points with high x1 sit well above points with low x1 even at the same x2 value, and the slope of the relationship looks steeper among high-x1 points.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-practice-dependence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.5: SHAP value for x2 against the observed value of x2, colored by x1.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The horizontal axis is the observed value of x2. The vertical axis is the SHAP value assigned to x2. Color is the observed value of x1, from blue (low x1) to red (high x1).</p>
+<p>Look at the points near x2 = 1. Some of them have a small SHAP value for x2. Others, at a similar x2 value, have a much larger SHAP value. x2 is nearly the same in both cases, so x2’s own value cannot be the reason its contribution differs. Color gives the reason: the points with a larger x1 (red) tend to have a larger SHAP value for x2 than the points with a smaller x1 (blue), even when x2 is about the same. The fitted model is using x2 differently depending on x1.</p>
+<p>This is the interaction between x1 and x2 that the previous chapter introduced: the contribution of x2 is not determined by x2 alone. It also depends on x1. The simulated outcome contains the term <span class="math inline">\(2x_1x_2\)</span>, so this pattern is consistent with the structure used to generate the data.</p>
+</section>
+<section id="classification-and-the-output-scale" class="level2" data-number="2.10">
+<h2 data-number="2.10" class="anchored" data-anchor-id="classification-and-the-output-scale"><span class="header-section-number">2.10</span> Classification and the output scale</h2>
+<p>SHAP values for a classifier can be reported on more than one scale. This section fits a classifier and shows the same explanation on two of them.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>dtrain_c <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> <span class="fu">as.matrix</span>(train[, feature_cols]), <span class="at">label =</span> train<span class="sc">$</span>y_class)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>fit_clf <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">params =</span> <span class="fu">list</span>(<span class="at">max_depth =</span> <span class="dv">3</span>, <span class="at">eta =</span> <span class="fl">0.05</span>, <span class="at">objective =</span> <span class="st">"binary:logistic"</span>, <span class="at">eval_metric =</span> <span class="st">"logloss"</span>),</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> dtrain_c, <span class="at">nrounds =</span> <span class="dv">300</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>proba <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_clf, <span class="fu">as.matrix</span>(test[, feature_cols]))</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>auc <span class="ot">&lt;-</span> <span class="cf">function</span>(y, p) {</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> <span class="fu">rank</span>(p)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>  n1 <span class="ot">&lt;-</span> <span class="fu">sum</span>(y <span class="sc">==</span> <span class="dv">1</span>); n0 <span class="ot">&lt;-</span> <span class="fu">sum</span>(y <span class="sc">==</span> <span class="dv">0</span>)</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>  (<span class="fu">sum</span>(r[y <span class="sc">==</span> <span class="dv">1</span>]) <span class="sc">-</span> n1 <span class="sc">*</span> (n1 <span class="sc">+</span> <span class="dv">1</span>) <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">/</span> (n1 <span class="sc">*</span> n0)</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"test AUC:"</span>, <span class="fu">round</span>(<span class="fu">auc</span>(test<span class="sc">$</span>y_class, proba), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>test AUC: 0.7062</code></pre>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> roc_auc_score</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>clf <span class="op">=</span> xgb.XGBClassifier(n_estimators<span class="op">=</span><span class="dv">300</span>, max_depth<span class="op">=</span><span class="dv">3</span>, learning_rate<span class="op">=</span><span class="fl">0.05</span>,</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>                         random_state<span class="op">=</span><span class="dv">0</span>, eval_metric<span class="op">=</span><span class="st">"logloss"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>clf.fit(train[feature_cols], train[<span class="st">"y_class"</span>])</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>proba_test <span class="op">=</span> clf.predict_proba(test[feature_cols])[:, <span class="dv">1</span>]</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"test AUC:"</span>, <span class="bu">round</span>(roc_auc_score(test[<span class="st">"y_class"</span>], proba_test), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>test AUC: 0.7062</code></pre>
+</div>
+</div>
+</div>
+<p>Test AUC is 0.706 in both languages. The rest of this section is not about classifier evaluation. It explains which scale a classifier’s SHAP values are reported on, starting with predicted probability, the easier of the two scales to interpret, and then showing the raw margin scale that some software returns natively. Every SHAP value in this section explains the same target, the classifier’s score for <code>y_class = 1</code>: a positive value pushes the prediction toward <code>y_class = 1</code>, a negative value pushes it away.</p>
+<section id="predicted-probability-computed-from-an-explicit-background" class="level3" data-number="2.10.1">
+<h3 data-number="2.10.1" class="anchored" data-anchor-id="predicted-probability-computed-from-an-explicit-background"><span class="header-section-number">2.10.1</span> Predicted probability, computed from an explicit background</h3>
+<p>A probability baseline is built the same way as any other baseline in this course: take every observation in a background sample, obtain the model’s predicted probability for each one, and average those probabilities. That average is the reference probability the SHAP values are computed against. With a background of <span class="math inline">\(m\)</span> rows,</p>
+<p><span class="math display">\[\phi_0^{(\text{prob})} = \frac{1}{m}\sum_{r=1}^m p(X_r),\]</span></p>
+<p>the same masking-and-averaging mechanism from the previous chapter, applied here to a predicted probability instead of a numeric outcome. R and Python use the same 100 background rows, the first 100 training rows, so both languages answer the same question.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>pred_fun_prob <span class="ot">&lt;-</span> <span class="cf">function</span>(model, X) <span class="fu">predict</span>(model, xgboost<span class="sc">::</span><span class="fu">xgb.DMatrix</span>(<span class="fu">data.matrix</span>(X)))</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>background <span class="ot">&lt;-</span> train[<span class="dv">1</span><span class="sc">:</span><span class="dv">100</span>, feature_cols]</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>ps <span class="ot">&lt;-</span> <span class="fu">permshap</span>(fit_clf, <span class="at">X =</span> test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, feature_cols], <span class="at">bg_X =</span> background,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>               <span class="at">pred_fun =</span> pred_fun_prob, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"probability baseline:"</span>, <span class="fu">round</span>(ps<span class="sc">$</span>baseline, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(ps<span class="sc">$</span>S, <span class="dv">4</span>))</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>recon_proba <span class="ot">&lt;-</span> ps<span class="sc">$</span>baseline <span class="sc">+</span> <span class="fu">rowSums</span>(ps<span class="sc">$</span>S)</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"baseline + sum(shap), probability:"</span>, <span class="fu">round</span>(recon_proba, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"predict() probabilities:"</span>, <span class="fu">round</span>(proba[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>probability baseline: 0.5128
+          x1      x2      x3      x4
+[1,]  0.0010 -0.0234 -0.1767 -0.0241
+[2,] -0.0582 -0.0797  0.1063  0.0111
+[3,] -0.3183  0.0063 -0.0211 -0.0141
+baseline + sum(shap), probability: 0.2896 0.4923 0.1657
+predict() probabilities: 0.2896 0.4923 0.1657</code></pre>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>background <span class="op">=</span> train[feature_cols].iloc[:<span class="dv">100</span>]</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>explainer_proba <span class="op">=</span> shap.TreeExplainer(clf, data<span class="op">=</span>background, model_output<span class="op">=</span><span class="st">"probability"</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>expl_proba <span class="op">=</span> explainer_proba(test[feature_cols].iloc[:<span class="dv">3</span>])</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"probability baseline:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(expl_proba.base_values[<span class="dv">0</span>]), <span class="dv">4</span>))</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(expl_proba.values, <span class="dv">4</span>))</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>recon_proba <span class="op">=</span> expl_proba.base_values <span class="op">+</span> expl_proba.values.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"baseline + sum(shap), probability:"</span>, np.<span class="bu">round</span>(recon_proba, <span class="dv">4</span>))</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"predict_proba:"</span>, np.<span class="bu">round</span>(clf.predict_proba(test[feature_cols].iloc[:<span class="dv">3</span>])[:, <span class="dv">1</span>], <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>probability baseline: 0.5128
+[[ 0.0032 -0.0229 -0.1793 -0.0242]
+ [-0.0595 -0.0817  0.1093  0.0114]
+ [-0.3192  0.0087 -0.0179 -0.0188]]
+baseline + sum(shap), probability: [0.2896 0.4923 0.1657]
+predict_proba: [0.2896 0.4923 0.1657]</code></pre>
+</div>
+</div>
+</div>
+<p>R’s <code>permshap</code> and Python’s <code>TreeExplainer</code> agree on the probability baseline, 0.5128, and on the reconstructed probability for all three patients, 0.2896, 0.4923, and 0.1657, matching each language’s own <code>predict</code>/<code>predict_proba</code> exactly. The individual feature contributions are close but not identical, for example x1 contributes <span class="math inline">\(+0.0010\)</span> to the first patient in R and <span class="math inline">\(+0.0032\)</span> in Python. This is not a background mismatch: both use the identical 100 background rows and the same fitted model. <code>shap.TreeExplainer</code>’s <code>model_output="probability"</code> computes an efficient approximation to the probability-scale Shapley value from the tree structure directly. Checked against a direct calculation that masks every coalition explicitly and averages predicted probability over the background, <code>permshap</code>’s values match that direct calculation exactly, while <code>TreeExplainer</code>’s are close but not identical, even with a single background row. Both are legitimate SHAP values for the same probability value function. Which algorithm computed a SHAP value is a separate question from which value function it targets, and this is a case where the two disagree slightly while the value function agrees exactly.</p>
+</section>
+<section id="native-xgboost-shap-uses-the-raw-margin" class="level3" data-number="2.10.2">
+<h3 data-number="2.10.2" class="anchored" data-anchor-id="native-xgboost-shap-uses-the-raw-margin"><span class="header-section-number">2.10.2</span> Native XGBoost SHAP uses the raw margin</h3>
+<p>R’s native <code>predcontrib</code> route, and Python’s <code>TreeExplainer</code> with no background supplied, both report contributions on a different scale: the raw margin, or log-odds score, that a <code>binary:logistic</code> classifier works with internally before applying the logistic function.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>contrib <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_clf, <span class="fu">as.matrix</span>(test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, feature_cols]), <span class="at">predcontrib =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"predcontrib output (raw-margin/log-odds scale):</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(contrib, <span class="dv">4</span>))</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>margin_sum <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(contrib)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"logistic(margin sum):"</span>, <span class="fu">round</span>(<span class="dv">1</span> <span class="sc">/</span> (<span class="dv">1</span> <span class="sc">+</span> <span class="fu">exp</span>(<span class="sc">-</span>margin_sum)), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"predict() probabilities:"</span>, <span class="fu">round</span>(proba[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>], <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>predcontrib output (raw-margin/log-odds scale):
+       x1      x2      x3      x4 (Intercept)
+3  0.0728 -0.1357 -0.7295 -0.0848     -0.0201
+4 -0.2585 -0.3663  0.5366  0.0774     -0.0201
+6 -1.5688  0.0325  0.0131 -0.0731     -0.0201
+logistic(margin sum): 0.2896 0.4923 0.1657
+predict() probabilities: 0.2896 0.4923 0.1657</code></pre>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>explainer_margin <span class="op">=</span> shap.TreeExplainer(clf)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>expl_margin <span class="op">=</span> explainer_margin(test[feature_cols].iloc[:<span class="dv">3</span>])</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"raw-margin baseline:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(expl_margin.base_values[<span class="dv">0</span>]), <span class="dv">4</span>))</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>recon_margin <span class="op">=</span> expl_margin.base_values <span class="op">+</span> expl_margin.values.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"baseline + sum(shap), raw margin:"</span>, np.<span class="bu">round</span>(recon_margin, <span class="dv">4</span>))</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"logistic of that:"</span>, np.<span class="bu">round</span>(<span class="dv">1</span> <span class="op">/</span> (<span class="dv">1</span> <span class="op">+</span> np.exp(<span class="op">-</span>recon_margin)), <span class="dv">4</span>))</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"predict_proba:"</span>, np.<span class="bu">round</span>(clf.predict_proba(test[feature_cols].iloc[:<span class="dv">3</span>])[:, <span class="dv">1</span>], <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>raw-margin baseline: -0.0201
+baseline + sum(shap), raw margin: [-0.8974 -0.0309 -1.6164]
+logistic of that: [0.2896 0.4923 0.1657]
+predict_proba: [0.2896 0.4923 0.1657]</code></pre>
+</div>
+</div>
+</div>
+<p>Adding the raw-margin SHAP values to the raw-margin baseline reconstructs a log-odds value. Applying the logistic function to that complete reconstruction, not to any single piece of it, gives 0.2896, 0.4923, and 0.1657, matching <code>predict_proba</code> exactly. The logistic function is only applied once the whole sum, baseline plus every feature’s contribution, has already been added up.</p>
+<p>It is tempting to shortcut this by converting the raw-margin baseline alone. That shortcut is wrong. The raw-margin baseline above, <span class="math inline">\(-0.0201\)</span>, comes from a tree-path-dependent calculation with no explicit background, so it is not directly comparable to the probability baseline computed above. Even recomputed on the identical 100-row background used for the probability baseline, the raw margin there averages to <span class="math inline">\(0.0864\)</span>, and <span class="math inline">\(\text{logistic}(0.0864) = 0.5216\)</span>, not the <span class="math inline">\(0.5128\)</span> probability baseline computed directly on that same background. The logistic function is nonlinear, so the average of a nonlinear function is not the nonlinear function of the average:</p>
+<p><span class="math display">\[\mathbb{E}[\text{logistic}(\eta(X))] \;\neq\; \text{logistic}\big(\mathbb{E}[\eta(X)]\big).\]</span></p>
+<p>A probability baseline and a raw-margin baseline are two separately computed numbers, not two views of the same number. The same is true feature by feature: a raw-margin SHAP value is not converted to a probability-scale SHAP value by applying the logistic function to it on its own. Only a complete reconstruction, an entire baseline plus an entire set of contributions on one consistent scale, converts cleanly to the other scale.</p>
+<p>This is why a student can get two very different-looking sets of SHAP numbers from two valid explainers on the same model and the same observations. Both are correct. They decompose different representations of the same prediction, and neither is a mistaken version of the other.</p>
+</section>
+</section>
+<section id="background-choice" class="level2" data-number="2.11">
+<h2 data-number="2.11" class="anchored" data-anchor-id="background-choice"><span class="header-section-number">2.11</span> Background choice</h2>
+<p>In the previous chapter, changing the background changed the baseline and the SHAP values, while leaving the model’s prediction unchanged. This section reproduces that with the fitted regression model, comparing a general background against one restricted to observations with a low value of x1.</p>
+<p>To keep the comparison between the two backgrounds rather than between two random samples, R and Python use the same background rows here: the first 200 training observations for the general background, and the first 200 training observations with <span class="math inline">\(x_1 &lt; -1\)</span> for the restricted background. Because both languages read the same CSV file in the same row order, selecting rows by position gives identical background data in both languages.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>pred_fun_xgb <span class="ot">&lt;-</span> <span class="cf">function</span>(model, X) <span class="fu">predict</span>(model, xgboost<span class="sc">::</span><span class="fu">xgb.DMatrix</span>(<span class="fu">data.matrix</span>(X)))</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>bg_general <span class="ot">&lt;-</span> train[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, feature_cols]</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>low_x1 <span class="ot">&lt;-</span> train[train<span class="sc">$</span>x1 <span class="sc">&lt;</span> <span class="sc">-</span><span class="dv">1</span>, feature_cols]</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>bg_restricted <span class="ot">&lt;-</span> low_x1[<span class="dv">1</span><span class="sc">:</span><span class="dv">200</span>, ]</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>ps_general <span class="ot">&lt;-</span> <span class="fu">permshap</span>(fit_reg, <span class="at">X =</span> test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, feature_cols], <span class="at">bg_X =</span> bg_general,</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>                        <span class="at">pred_fun =</span> pred_fun_xgb, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>ps_restricted <span class="ot">&lt;-</span> <span class="fu">permshap</span>(fit_reg, <span class="at">X =</span> test[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>, feature_cols], <span class="at">bg_X =</span> bg_restricted,</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>                           <span class="at">pred_fun =</span> pred_fun_xgb, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"baseline, general background:"</span>, <span class="fu">round</span>(ps_general<span class="sc">$</span>baseline, <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"baseline, low-x1 background:"</span>, <span class="fu">round</span>(ps_restricted<span class="sc">$</span>baseline, <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"prediction (unchanged):"</span>, <span class="fu">round</span>(pred[<span class="dv">1</span>], <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SHAP values, general background:"</span>, <span class="fu">round</span>(ps_general<span class="sc">$</span>S[<span class="dv">1</span>, ], <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"SHAP values, low-x1 background:"</span>, <span class="fu">round</span>(ps_restricted<span class="sc">$</span>S[<span class="dv">1</span>, ], <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>baseline, general background: 4.985
+baseline, low-x1 background: -0.79
+prediction (unchanged): 2.099
+SHAP values, general background: 1.433 -1.206 -3.148 0.035
+SHAP values, low-x1 background: 6.082 -0.339 -2.885 0.032</code></pre>
+</div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>predict_fn <span class="op">=</span> <span class="kw">lambda</span> X: reg.predict(pd.DataFrame(X, columns<span class="op">=</span>feature_cols))</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>bg_general <span class="op">=</span> train[feature_cols].iloc[:<span class="dv">200</span>].to_numpy()</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>low_x1 <span class="op">=</span> train[train.x1 <span class="op">&lt;</span> <span class="op">-</span><span class="dv">1</span>].reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>bg_restricted <span class="op">=</span> low_x1[feature_cols].iloc[:<span class="dv">200</span>].to_numpy()</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>row0 <span class="op">=</span> test[feature_cols].iloc[:<span class="dv">1</span>].to_numpy()</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>ke_general <span class="op">=</span> shap.KernelExplainer(predict_fn, bg_general)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>sv_general <span class="op">=</span> ke_general.shap_values(row0, nsamples<span class="op">=</span><span class="st">"auto"</span>, silent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>ke_restricted <span class="op">=</span> shap.KernelExplainer(predict_fn, bg_restricted)</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>sv_restricted <span class="op">=</span> ke_restricted.shap_values(row0, nsamples<span class="op">=</span><span class="st">"auto"</span>, silent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"baseline, general background:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(ke_general.expected_value), <span class="dv">3</span>))</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"baseline, low-x1 background:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(ke_restricted.expected_value), <span class="dv">3</span>))</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"prediction (unchanged):"</span>, <span class="bu">round</span>(<span class="bu">float</span>(pred[<span class="dv">0</span>]), <span class="dv">3</span>))</span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"SHAP values, general background:"</span>, np.<span class="bu">round</span>(sv_general[<span class="dv">0</span>], <span class="dv">3</span>))</span>
+<span id="cb43-18"><a href="#cb43-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"SHAP values, low-x1 background:"</span>, np.<span class="bu">round</span>(sv_restricted[<span class="dv">0</span>], <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>baseline, general background: 4.985
+baseline, low-x1 background: -0.79
+prediction (unchanged): 2.099
+SHAP values, general background: [ 1.433 -1.206 -3.148  0.035]
+SHAP values, low-x1 background: [ 6.082 -0.339 -2.885  0.032]</code></pre>
+</div>
+</div>
+</div>
+<p>R’s <code>permshap()</code> and Python’s <code>shap.KernelExplainer</code> are both model-agnostic Shapley estimators, and with the same background rows and the same fitted model they return the same numbers here. The prediction for this observation, 2.099, is unchanged between the two backgrounds, because it depends only on the fitted model and this observation’s own feature values, neither of which changed. The baseline changes because the reference population changed: restricting the background to observations with a low x1 removes the higher-x1 rows that pulled the general baseline up, so the low-x1 baseline sits well below it. The SHAP values change as well, because they are no longer measured from the same starting point. Explaining this observation relative to a low-x1 population means x1 itself now accounts for a much larger share of the gap between baseline and prediction (6.082 against 1.433), because in that population, having a much higher x1 than typical is a bigger departure from what is expected.</p>
+</section>
+<section id="correlated-features-and-masking" class="level2" data-number="2.12">
+<h2 data-number="2.12" class="anchored" data-anchor-id="correlated-features-and-masking"><span class="header-section-number">2.12</span> Correlated features and masking</h2>
+<p>Two strongly correlated variables, z1 and z2, illustrate a problem with the masking mechanism described in the previous chapter.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>pair <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"data/correlated_pair.csv"</span>)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"correlation(z1, z2):"</span>, <span class="fu">round</span>(<span class="fu">cor</span>(pair<span class="sc">$</span>z1, pair<span class="sc">$</span>z2), <span class="dv">3</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>dtrain_pair <span class="ot">&lt;-</span> <span class="fu">xgb.DMatrix</span>(<span class="at">data =</span> <span class="fu">as.matrix</span>(pair[, <span class="fu">c</span>(<span class="st">"z1"</span>, <span class="st">"z2"</span>)]), <span class="at">label =</span> pair<span class="sc">$</span>y)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>fit_pair <span class="ot">&lt;-</span> <span class="fu">xgb.train</span>(<span class="at">params =</span> <span class="fu">list</span>(<span class="at">max_depth =</span> <span class="dv">3</span>, <span class="at">eta =</span> <span class="fl">0.1</span>, <span class="at">objective =</span> <span class="st">"reg:squarederror"</span>),</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>                       <span class="at">data =</span> dtrain_pair, <span class="at">nrounds =</span> <span class="dv">200</span>)</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a>pred_fun_pair <span class="ot">&lt;-</span> <span class="cf">function</span>(model, X) <span class="fu">predict</span>(model, xgboost<span class="sc">::</span><span class="fu">xgb.DMatrix</span>(<span class="fu">data.matrix</span>(X)))</span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a>ks_pair <span class="ot">&lt;-</span> <span class="fu">kernelshap</span>(fit_pair, <span class="at">X =</span> pair[<span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>, <span class="fu">c</span>(<span class="st">"z1"</span>, <span class="st">"z2"</span>)], <span class="at">bg_X =</span> pair[, <span class="fu">c</span>(<span class="st">"z1"</span>, <span class="st">"z2"</span>)],</span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">pred_fun =</span> pred_fun_pair, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(ks_pair<span class="sc">$</span>S, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>correlation(z1, z2): 0.913
+         z1     z2
+[1,]  1.885  0.453
+[2,]  3.564  1.166
+[3,]  1.001  0.437
+[4,]  1.481  0.618
+[5,] -2.098 -0.162</code></pre>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb47"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>pair <span class="op">=</span> pd.read_csv(<span class="st">"data/correlated_pair.csv"</span>)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"correlation(z1, z2):"</span>, <span class="bu">round</span>(<span class="bu">float</span>(pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]].corr().iloc[<span class="dv">0</span>, <span class="dv">1</span>]), <span class="dv">3</span>))</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>reg_pair <span class="op">=</span> xgb.XGBRegressor(n_estimators<span class="op">=</span><span class="dv">200</span>, max_depth<span class="op">=</span><span class="dv">3</span>, learning_rate<span class="op">=</span><span class="fl">0.1</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>reg_pair.fit(pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]], pair[<span class="st">"y"</span>])</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>predict_fn_pair <span class="op">=</span> <span class="kw">lambda</span> X: reg_pair.predict(pd.DataFrame(X, columns<span class="op">=</span>[<span class="st">"z1"</span>, <span class="st">"z2"</span>]))</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>bg_pair <span class="op">=</span> pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]].to_numpy()</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>ke_pair <span class="op">=</span> shap.KernelExplainer(predict_fn_pair, bg_pair)</span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>sv_pair <span class="op">=</span> ke_pair.shap_values(pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]].iloc[:<span class="dv">5</span>].to_numpy(), nsamples<span class="op">=</span><span class="st">"auto"</span>, silent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(sv_pair, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>correlation(z1, z2): 0.913
+[[ 1.885  0.453]
+ [ 3.564  1.166]
+ [ 1.001  0.437]
+ [ 1.481  0.618]
+ [-2.098 -0.162]]</code></pre>
+</div>
+</div>
+</div>
+<p>R’s <code>kernelshap()</code> and Python’s <code>shap.KernelExplainer</code> are used here with the same background, the full 400-row dataset, and give the same SHAP values.</p>
+<p>The masking mechanism from the previous chapter keeps retained features fixed at the explained observation’s values, and fills masked features from a background row. Suppose z1 = 3.5 for the observation being explained, and a background row has z1 = 0.2, z2 = 0.3. If z1 is retained and z2 is masked, the hybrid row becomes z1 = 3.5, z2 = 0.3. That combination can be unusual, because z1 and z2 are correlated at 0.913 in this data, and a z1 this high rarely occurs with a z2 this low. The relationship broken here is between the retained feature and the masked feature. When several features are masked at once and come from the same background row, their relationships with each other are preserved. It is specifically their relationship with whatever was retained that this kind of masking does not respect.</p>
+<p>Python’s <code>shap</code> package also provides <code>shap.maskers.Partition</code>, which groups features using a hierarchical clustering (by default based on correlation) and computes attributions along that hierarchy rather than over independently evaluated coalitions. It does not sample masked values conditionally on the retained ones. It changes how the attribution is built up in the first place, which changes the question being answered.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>part_masker <span class="op">=</span> shap.maskers.Partition(pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]], max_samples<span class="op">=</span><span class="dv">100</span>)</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>expl_part <span class="op">=</span> shap.Explainer(reg_pair.predict, part_masker)(pair[[<span class="st">"z1"</span>, <span class="st">"z2"</span>]].iloc[:<span class="dv">5</span>])</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(expl_part.values, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>[[ 1.693  0.365]
+ [ 3.325  1.126]
+ [ 0.785  0.374]
+ [ 1.261  0.559]
+ [-2.302 -0.238]]</code></pre>
+<p>Even with only two features, these values are not identical to the Independent masker’s values above. Partition masking builds the attribution along the feature hierarchy instead of over every coalition independently, so it is a different decomposition, not an approximation of the same one. R’s <code>kernelshap</code> package does not have a direct equivalent. The next chapter defines the marginal and conditional value functions precisely, and returns to what changes when masked features are drawn with or without regard to the retained ones.</p>
+<p>One-hot encoded variables are worth a short note here. A categorical feature such as color, with values red, blue, and green, is commonly represented to a model as three separate 0/1 columns: <code>color_red</code>, <code>color_blue</code>, <code>color_green</code>. SHAP returns a contribution for each of these encoded columns, because they are what the model actually sees as input. A column equal to 0 can still receive a nonzero SHAP value: “not red” can itself be informative to the model. If the goal is to report the importance of the original “color” variable rather than each encoded column separately, the three columns’ SHAP contributions are usually added together first.</p>
+</section>
+<section id="comparing-kernelshap-and-treeshap" class="level2" data-number="2.13">
+<h2 data-number="2.13" class="anchored" data-anchor-id="comparing-kernelshap-and-treeshap"><span class="header-section-number">2.13</span> Comparing KernelSHAP and TreeSHAP</h2>
+<p>TreeSHAP and KernelSHAP are two ways of computing a Shapley value. Whether they agree depends on whether they are set up to answer the same question. If both use the same model, the same background, and the same output scale, they should target the same explanation. If one uses a tree-path-dependent calculation with no explicit background and the other uses an explicit marginal background, they are computing two different value functions, and should not be expected to agree.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-2" role="tab" aria-controls="tabset-14-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
+<p>R’s native <code>predcontrib</code> has no argument for supplying an explicit background. It always uses a tree-path-dependent calculation based on the training data captured inside the trees. Comparing it to <code>permshap()</code> with an explicit background compares two different value functions on purpose.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>bg_small <span class="ot">&lt;-</span> train[<span class="dv">1</span><span class="sc">:</span><span class="dv">50</span>, feature_cols]</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>explain_rows <span class="ot">&lt;-</span> test[<span class="dv">1</span><span class="sc">:</span><span class="dv">20</span>, feature_cols]</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>native_contrib <span class="ot">&lt;-</span> <span class="fu">predict</span>(fit_reg, <span class="fu">as.matrix</span>(explain_rows), <span class="at">predcontrib =</span> <span class="cn">TRUE</span>)[, feature_cols]</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>ps <span class="ot">&lt;-</span> <span class="fu">permshap</span>(fit_reg, <span class="at">X =</span> explain_rows, <span class="at">bg_X =</span> bg_small, <span class="at">pred_fun =</span> pred_fun_xgb, <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"mean abs native predcontrib:"</span>, <span class="fu">round</span>(<span class="fu">mean</span>(<span class="fu">abs</span>(native_contrib)), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb51-8"><a href="#cb51-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"mean abs permshap:"</span>, <span class="fu">round</span>(<span class="fu">mean</span>(<span class="fu">abs</span>(ps<span class="sc">$</span>S)), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb51-9"><a href="#cb51-9" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"mean abs difference:"</span>, <span class="fu">round</span>(<span class="fu">mean</span>(<span class="fu">abs</span>(native_contrib <span class="sc">-</span> ps<span class="sc">$</span>S)), <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>mean abs native predcontrib: 1.6235
+mean abs permshap: 1.6437
+mean abs difference: 0.1216</code></pre>
+</div>
+<div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
+<p>Here, <code>TreeExplainer</code> is given the same explicit background and the same marginal (interventional) definition that <code>KernelExplainer</code> uses, so both are computing the same value function by two different algorithms.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb53"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> time</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>bg_small <span class="op">=</span> train[feature_cols].iloc[:<span class="dv">50</span>]</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>explain_rows <span class="op">=</span> test[feature_cols].iloc[:<span class="dv">20</span>]</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>t0 <span class="op">=</span> time.time()</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>tree_expl <span class="op">=</span> shap.TreeExplainer(reg, data<span class="op">=</span>bg_small, feature_perturbation<span class="op">=</span><span class="st">"interventional"</span>)</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>tree_vals <span class="op">=</span> tree_expl(explain_rows).values</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>t_tree <span class="op">=</span> time.time() <span class="op">-</span> t0</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>predict_fn <span class="op">=</span> <span class="kw">lambda</span> X: reg.predict(pd.DataFrame(X, columns<span class="op">=</span>feature_cols))</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>t0 <span class="op">=</span> time.time()</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>kernel_expl <span class="op">=</span> shap.KernelExplainer(predict_fn, bg_small)</span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>kernel_vals <span class="op">=</span> kernel_expl.shap_values(explain_rows, nsamples<span class="op">=</span><span class="dv">200</span>, silent<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>t_kernel <span class="op">=</span> time.time() <span class="op">-</span> t0</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TreeSHAP time (s):"</span>, <span class="bu">round</span>(t_tree, <span class="dv">4</span>))</span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"KernelSHAP time (s):"</span>, <span class="bu">round</span>(t_kernel, <span class="dv">4</span>))</span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"max abs difference:"</span>, <span class="bu">round</span>(<span class="bu">float</span>(np.<span class="bu">max</span>(np.<span class="bu">abs</span>(tree_vals <span class="op">-</span> kernel_vals))), <span class="dv">4</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>TreeSHAP time (s): 0.0279
+KernelSHAP time (s): 0.0557
+max abs difference: 0.0</code></pre>
+</div>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-practice-timing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Bar chart with two bars. TreeSHAP takes 0.029 seconds. KernelSHAP takes 0.060 seconds.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-timing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/22-kernelshap-vs-treeshap-timing.svg" class="img-fluid figure-img" alt="Bar chart with two bars. TreeSHAP takes 0.029 seconds. KernelSHAP takes 0.060 seconds.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-practice-timing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.6: Runtime for TreeSHAP and KernelSHAP in this example.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>In the Python panel, both explainers are set up to compute the same marginal value function from the same 50-row background, and in this example their values agree to numerical precision. TreeSHAP is faster here (<a href="#fig-practice-timing" class="quarto-xref">Figure&nbsp;<span>2.6</span></a>), because it uses the tree structure directly instead of repeatedly evaluating the model on masked inputs, but this specific ratio is a property of this example, with 4 features and 20 explained rows, not a general guarantee.</p>
+<p>In the R panel, native <code>predcontrib</code> and <code>permshap</code> are not computing the same value function, so the two sets of values differ (mean absolute values of 1.62 and 1.64, a mean absolute difference of 0.12). One integrates out missing features using the tree structure and the training data’s cover statistics. The other integrates them out using an explicit 50-row background sample. Neither is a more correct Shapley value than the other. They answer related but different attribution questions, and the difference here reflects that, not an error in either computation.</p>
+</section>
+<section id="a-random-forest-example" class="level2" data-number="2.14">
+<h2 data-number="2.14" class="anchored" data-anchor-id="a-random-forest-example"><span class="header-section-number">2.14</span> A random forest example</h2>
+<p>XGBoost has its own SHAP implementation. Many other tree-based models do not, including R’s <code>ranger</code> and Python’s <code>RandomForestRegressor</code>. This is a brief example of using <code>treeshap</code> for <code>ranger</code>, and <code>shap.TreeExplainer</code> for a scikit-learn forest, on the same simulated data.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true" href="">R</a></li><li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false" href="">Python</a></li></ul>
+<div class="tab-content">
+<div id="tabset-15-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-15-1-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ranger)</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(treeshap)</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">0</span>)</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>rf <span class="ot">&lt;-</span> <span class="fu">ranger</span>(y <span class="sc">~</span> x1 <span class="sc">+</span> x2 <span class="sc">+</span> x3 <span class="sc">+</span> x4, <span class="at">data =</span> train, <span class="at">num.trees =</span> <span class="dv">300</span>, <span class="at">max.depth =</span> <span class="dv">6</span>)</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>pred_rf <span class="ot">&lt;-</span> <span class="fu">predict</span>(rf, test)<span class="sc">$</span>predictions</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>r2_rf <span class="ot">&lt;-</span> <span class="dv">1</span> <span class="sc">-</span> <span class="fu">sum</span>((test<span class="sc">$</span>y <span class="sc">-</span> pred_rf)<span class="sc">^</span><span class="dv">2</span>) <span class="sc">/</span> <span class="fu">sum</span>((test<span class="sc">$</span>y <span class="sc">-</span> <span class="fu">mean</span>(test<span class="sc">$</span>y))<span class="sc">^</span><span class="dv">2</span>)</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ranger R2 on the test set:"</span>, <span class="fu">round</span>(r2_rf, <span class="dv">4</span>), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>unified <span class="ot">&lt;-</span> treeshap<span class="sc">::</span><span class="fu">ranger.unify</span>(rf, train[, feature_cols])</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>ts <span class="ot">&lt;-</span> treeshap<span class="sc">::</span><span class="fu">treeshap</span>(unified, test[, feature_cols], <span class="at">verbose =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>mean_abs_rf <span class="ot">&lt;-</span> <span class="fu">colMeans</span>(<span class="fu">abs</span>(ts<span class="sc">$</span>shaps))</span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">round</span>(<span class="fu">sort</span>(mean_abs_rf, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>ranger R2 on the test set: 0.831
+   x1    x3    x2    x4
+2.981 1.223 1.091 0.014</code></pre>
+</div>
+<div id="tabset-15-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-15-2-tab">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb57"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.ensemble <span class="im">import</span> RandomForestRegressor</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>rf <span class="op">=</span> RandomForestRegressor(n_estimators<span class="op">=</span><span class="dv">300</span>, max_depth<span class="op">=</span><span class="dv">6</span>, random_state<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>rf.fit(train[feature_cols], train[<span class="st">"y"</span>])</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>pred_rf <span class="op">=</span> rf.predict(test[feature_cols])</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a>r2_rf <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> np.<span class="bu">sum</span>((test[<span class="st">"y"</span>] <span class="op">-</span> pred_rf) <span class="op">**</span> <span class="dv">2</span>) <span class="op">/</span> np.<span class="bu">sum</span>((test[<span class="st">"y"</span>] <span class="op">-</span> test[<span class="st">"y"</span>].mean()) <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"RF R2 on the test set:"</span>, <span class="bu">round</span>(r2_rf, <span class="dv">4</span>))</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>expl_rf <span class="op">=</span> shap.TreeExplainer(rf)</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>explanation_rf <span class="op">=</span> expl_rf(test[feature_cols])</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>mean_abs_rf <span class="op">=</span> np.<span class="bu">abs</span>(explanation_rf.values).mean(axis<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, val <span class="kw">in</span> <span class="bu">sorted</span>(<span class="bu">zip</span>(feature_cols, mean_abs_rf), key<span class="op">=</span><span class="kw">lambda</span> t: <span class="op">-</span>t[<span class="dv">1</span>]):</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>val<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<pre><code>RF R2 on the test set: 0.8469
+  x1: 3.111
+  x3: 1.285
+  x2: 1.166
+  x4: 0.004</code></pre>
+</div>
+</div>
+</div>
+<div class="visual-card">
+<div id="fig-practice-rf-importance" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Horizontal bar chart with four features. x1 has the longest bar, followed by x3, then x2, then x4 close to zero.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-practice-rf-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/23-random-forest-importance.svg" class="img-fluid figure-img" alt="Horizontal bar chart with four features. x1 has the longest bar, followed by x3, then x2, then x4 close to zero.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-practice-rf-importance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.7: Global SHAP importance for the Python random forest.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><code>ranger</code> and scikit-learn’s <code>RandomForestRegressor</code> are different implementations of a random forest, fit independently here, so their R² values differ (0.831 against 0.847). We do not expect their observation-level SHAP values to match. What both agree on is which features the fitted model relies on: x1 most, x3 and x2 less and at a similar level to each other, and x4 close to zero, matching what the XGBoost model above also showed.</p>
+</section>
+<section id="summary" class="level2" data-number="2.15">
+<h2 data-number="2.15" class="anchored" data-anchor-id="summary"><span class="header-section-number">2.15</span> Summary</h2>
+<p>This chapter fit models in R and Python, computed SHAP values for them, checked additivity, read local and global plots, compared output scales, backgrounds, and masking strategies, and compared two SHAP algorithms on the same and on different value functions. The next chapter derives the Shapley value formula, the SHAP kernel, and the weighted regression behind KernelSHAP from first principles.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./intuition.html" class="pagination-link" aria-label="SHAP">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./mathematics.html" class="pagination-link" aria-label="How SHAP and KernelSHAP work">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="371.52pt" height="180.72pt" viewBox="0 0 371.52 180.72" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-24T19:18:32.366178</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 180.72 
+L 371.52 180.72 
+L 371.52 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 39.3408 128.0592 
+L 117.9072 128.0592 
+Q 120.76416 128.0592 120.76416 123.624 
+L 120.76416 57.096 
+Q 120.76416 52.6608 117.9072 52.6608 
+L 39.3408 52.6608 
+Q 36.48384 52.6608 36.48384 57.096 
+L 36.48384 123.624 
+Q 36.48384 128.0592 39.3408 128.0592 
+z
+" clip-path="url(#p17ab1acd2b)" style="fill: #ffffff; stroke: #4d4d4d; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 253.6128 128.0592 
+L 332.1792 128.0592 
+Q 335.03616 128.0592 335.03616 123.624 
+L 335.03616 57.096 
+Q 335.03616 52.6608 332.1792 52.6608 
+L 253.6128 52.6608 
+Q 250.75584 52.6608 250.75584 57.096 
+L 250.75584 123.624 
+Q 250.75584 128.0592 253.6128 128.0592 
+z
+" clip-path="url(#p17ab1acd2b)" style="fill: #ffffff; stroke: #c0392b; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 127.046848 90.36 
+Q 185.758204 90.36 242.233492 90.36 
+" clip-path="url(#p17ab1acd2b)" style="fill: none; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+    <path d="M 233.433492 85.96 
+L 242.233492 90.36 
+L 233.433492 94.76 
+z
+" clip-path="url(#p17ab1acd2b)" style="fill: #333333; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 20px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #4d4d4d" x="78.624" y="81.695313" transform="rotate(-0 78.624 81.695313)">10</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #333333" transform="translate(28.35607 152.057385)">Baseline prediction</text>
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #333333" transform="translate(43.47525 164.660256)">(background)</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 20px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #c0392b" x="292.896" y="81.695313" transform="rotate(-0 292.896 81.695313)">19</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #333333" transform="translate(257.927719 152.057385)">Prediction for</text>
+    <text style="font-size: 10.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #333333" transform="translate(250.599047 164.660256)">this observation</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 11px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="185.76" y="70.956" transform="rotate(-0 185.76 70.956)">+9 to explain</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p17ab1acd2b">
+   <rect x="7.2" y="7.2" width="357.12" height="166.32"/>
+  </clipPath>
+ </defs>
+</svg>

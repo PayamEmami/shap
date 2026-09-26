@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="540.989609pt" height="271.008pt" viewBox="0 0 540.989609 271.008" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-09-24T19:19:28.069362</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.11.2, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 271.008 
+L 540.989609 271.008 
+L 540.989609 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 35.495609 209.25504 
+L 87.947609 209.25504 
+Q 89.854955 209.25504 89.854955 203.9328 
+L 89.854955 124.0992 
+Q 89.854955 118.77696 87.947609 118.77696 
+L 35.495609 118.77696 
+Q 33.588264 118.77696 33.588264 124.0992 
+L 33.588264 203.9328 
+Q 33.588264 209.25504 35.495609 209.25504 
+z
+" clip-path="url(#p9a6a73cbe2)" style="fill: #ffffff; stroke: #4d4d4d; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 169.009791 209.25504 
+L 221.461791 209.25504 
+Q 223.369137 209.25504 223.369137 203.9328 
+L 223.369137 124.0992 
+Q 223.369137 118.77696 221.461791 118.77696 
+L 169.009791 118.77696 
+Q 167.102446 118.77696 167.102446 124.0992 
+L 167.102446 203.9328 
+Q 167.102446 209.25504 169.009791 209.25504 
+z
+" clip-path="url(#p9a6a73cbe2)" style="fill: #ffffff; stroke: #c0392b; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 92.329475 164.016 
+Q 128.477646 164.016 162.389749 164.016 
+" clip-path="url(#p9a6a73cbe2)" style="fill: none; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+    <path d="M 155.189749 160.416 
+L 162.389749 164.016 
+L 155.189749 167.616 
+z
+" clip-path="url(#p9a6a73cbe2)" style="fill: #333333; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+   </g>
+   <g id="text_1">
+    <text style="font-weight: 700; font-size: 17px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #4d4d4d" x="61.721609" y="155.126416" transform="rotate(-0 61.721609 155.126416)">12.75</text>
+   </g>
+   <g id="text_2">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="61.721609" y="234.816037" transform="rotate(-0 61.721609 234.816037)">Baseline</text>
+   </g>
+   <g id="text_3">
+    <text style="font-weight: 700; font-size: 17px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #c0392b" x="195.235791" y="155.126416" transform="rotate(-0 195.235791 155.126416)">18.70</text>
+   </g>
+   <g id="text_4">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="195.235791" y="234.816037" transform="rotate(-0 195.235791 234.816037)">Prediction</text>
+   </g>
+   <g id="text_5">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="128.4787" y="142.72704" transform="rotate(-0 128.4787 142.72704)">+5.95 to explain</text>
+   </g>
+   <g id="text_6">
+    <text style="font-size: 11px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #222222" x="128.4787" y="58.224" transform="rotate(-0 128.4787 58.224)">General population background</text>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_5">
+    <path d="M 321.597428 209.25504 
+L 374.049428 209.25504 
+Q 375.956773 209.25504 375.956773 203.9328 
+L 375.956773 124.0992 
+Q 375.956773 118.77696 374.049428 118.77696 
+L 321.597428 118.77696 
+Q 319.690082 118.77696 319.690082 124.0992 
+L 319.690082 203.9328 
+Q 319.690082 209.25504 321.597428 209.25504 
+z
+" clip-path="url(#p6b129338ed)" style="fill: #ffffff; stroke: #4d4d4d; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 455.111609 209.25504 
+L 507.563609 209.25504 
+Q 509.470955 209.25504 509.470955 203.9328 
+L 509.470955 124.0992 
+Q 509.470955 118.77696 507.563609 118.77696 
+L 455.111609 118.77696 
+Q 453.204264 118.77696 453.204264 124.0992 
+L 453.204264 203.9328 
+Q 453.204264 209.25504 455.111609 209.25504 
+z
+" clip-path="url(#p6b129338ed)" style="fill: #ffffff; stroke: #c0392b; stroke-width: 2; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 378.431293 164.016 
+Q 414.579464 164.016 448.491567 164.016 
+" clip-path="url(#p6b129338ed)" style="fill: none; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+    <path d="M 441.291567 160.416 
+L 448.491567 164.016 
+L 441.291567 167.616 
+z
+" clip-path="url(#p6b129338ed)" style="fill: #333333; stroke: #333333; stroke-width: 2; stroke-linecap: round"/>
+   </g>
+   <g id="text_7">
+    <text style="font-weight: 700; font-size: 17px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #4d4d4d" x="347.823428" y="155.126416" transform="rotate(-0 347.823428 155.126416)">18.10</text>
+   </g>
+   <g id="text_8">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="347.823428" y="234.816037" transform="rotate(-0 347.823428 234.816037)">Baseline</text>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 17px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #c0392b" x="481.337609" y="155.126416" transform="rotate(-0 481.337609 155.126416)">18.70</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="481.337609" y="234.816037" transform="rotate(-0 481.337609 234.816037)">Prediction</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 10px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; text-anchor: middle; fill: #333333" x="414.580518" y="142.72704" transform="rotate(-0 414.580518 142.72704)">+0.60 to explain</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 11px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #222222" transform="translate(335.170831 45.020992)">Restricted comparison group</text>
+    <text style="font-size: 11px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #222222" transform="translate(339.362862 58.224)">(older, higher-BMI patients)</text>
+   </g>
+  </g>
+  <g id="text_13">
+   <text style="font-size: 11.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #222222" transform="translate(102.245703 17.089326)">Same patient, same fitted model, same final prediction.</text>
+   <text style="font-size: 11.5px; font-family: 'DejaVu Sans', 'Arial', 'Helvetica', sans-serif; fill: #222222" transform="translate(7.2 30.892471)">Changing the background changes the baseline and the size of what SHAP must explain.</text>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p9a6a73cbe2">
+   <rect x="9.269609" y="64.224" width="238.418182" height="199.584"/>
+  </clipPath>
+  <clipPath id="p6b129338ed">
+   <rect x="295.371428" y="64.224" width="238.418182" height="199.584"/>
+  </clipPath>
+ </defs>
+</svg>

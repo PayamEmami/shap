@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.16">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; How SHAP and KernelSHAP work – SHAP Values</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./exercises.html" rel="next">
+<link href="./practice.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-2051dbbaa7ae7a279e016470f480e120.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-6075faafe157bb2a1f54b1c2b772188f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./mathematics.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">SHAP Values</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intuition.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">SHAP</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./practice.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./mathematics.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./exercises.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">A worked case study</span></span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-are-we-trying-to-explain" id="toc-what-are-we-trying-to-explain" class="nav-link active" data-scroll-target="#what-are-we-trying-to-explain"><span class="header-section-number">3.1</span> What are we trying to explain?</a></li>
+  <li><a href="#coalitions-and-the-value-function" id="toc-coalitions-and-the-value-function" class="nav-link" data-scroll-target="#coalitions-and-the-value-function"><span class="header-section-number">3.2</span> Coalitions and the value function</a></li>
+  <li><a href="#contribution-in-different-coalitions" id="toc-contribution-in-different-coalitions" class="nav-link" data-scroll-target="#contribution-in-different-coalitions"><span class="header-section-number">3.3</span> Contribution in different coalitions</a></li>
+  <li><a href="#averaging-over-all-feature-orders" id="toc-averaging-over-all-feature-orders" class="nav-link" data-scroll-target="#averaging-over-all-feature-orders"><span class="header-section-number">3.4</span> Averaging over all feature orders</a></li>
+  <li><a href="#marginal-contribution" id="toc-marginal-contribution" class="nav-link" data-scroll-target="#marginal-contribution"><span class="header-section-number">3.5</span> Marginal contribution</a></li>
+  <li><a href="#from-feature-orders-to-shapley-weights" id="toc-from-feature-orders-to-shapley-weights" class="nav-link" data-scroll-target="#from-feature-orders-to-shapley-weights"><span class="header-section-number">3.6</span> From feature orders to Shapley weights</a>
+  <ul class="collapse">
+  <li><a href="#a-formula-for-the-weight-with-any-number-of-features" id="toc-a-formula-for-the-weight-with-any-number-of-features" class="nav-link" data-scroll-target="#a-formula-for-the-weight-with-any-number-of-features"><span class="header-section-number">3.6.1</span> A formula for the weight, with any number of features</a></li>
+  </ul></li>
+  <li><a href="#the-shapley-value-formula" id="toc-the-shapley-value-formula" class="nav-link" data-scroll-target="#the-shapley-value-formula"><span class="header-section-number">3.7</span> The Shapley value formula</a></li>
+  <li><a href="#properties-of-shapley-values" id="toc-properties-of-shapley-values" class="nav-link" data-scroll-target="#properties-of-shapley-values"><span class="header-section-number">3.8</span> Properties of Shapley values</a></li>
+  <li><a href="#how-masking-defines-a-coalition-value" id="toc-how-masking-defines-a-coalition-value" class="nav-link" data-scroll-target="#how-masking-defines-a-coalition-value"><span class="header-section-number">3.9</span> How masking defines a coalition value</a></li>
+  <li><a href="#marginal-and-conditional-shap" id="toc-marginal-and-conditional-shap" class="nav-link" data-scroll-target="#marginal-and-conditional-shap"><span class="header-section-number">3.10</span> Marginal and conditional SHAP</a></li>
+  <li><a href="#why-exact-calculation-becomes-expensive" id="toc-why-exact-calculation-becomes-expensive" class="nav-link" data-scroll-target="#why-exact-calculation-becomes-expensive"><span class="header-section-number">3.11</span> Why exact calculation becomes expensive</a></li>
+  <li><a href="#representing-coalitions-as-binary-masks" id="toc-representing-coalitions-as-binary-masks" class="nav-link" data-scroll-target="#representing-coalitions-as-binary-masks"><span class="header-section-number">3.12</span> Representing coalitions as binary masks</a></li>
+  <li><a href="#kernelshap-fits-an-additive-explanation-model" id="toc-kernelshap-fits-an-additive-explanation-model" class="nav-link" data-scroll-target="#kernelshap-fits-an-additive-explanation-model"><span class="header-section-number">3.13</span> KernelSHAP fits an additive explanation model</a></li>
+  <li><a href="#why-an-additive-model-cannot-fit-every-coalition-exactly" id="toc-why-an-additive-model-cannot-fit-every-coalition-exactly" class="nav-link" data-scroll-target="#why-an-additive-model-cannot-fit-every-coalition-exactly"><span class="header-section-number">3.14</span> Why an additive model cannot fit every coalition exactly</a></li>
+  <li><a href="#fitting-kernelshap-with-weighted-least-squares" id="toc-fitting-kernelshap-with-weighted-least-squares" class="nav-link" data-scroll-target="#fitting-kernelshap-with-weighted-least-squares"><span class="header-section-number">3.15</span> Fitting KernelSHAP with weighted least squares</a></li>
+  <li><a href="#the-shap-kernel" id="toc-the-shap-kernel" class="nav-link" data-scroll-target="#the-shap-kernel"><span class="header-section-number">3.16</span> The SHAP kernel</a>
+  <ul class="collapse">
+  <li><a href="#a-coalition-touches-the-permutation-average-twice" id="toc-a-coalition-touches-the-permutation-average-twice" class="nav-link" data-scroll-target="#a-coalition-touches-the-permutation-average-twice"><span class="header-section-number">3.16.1</span> A coalition touches the permutation average twice</a></li>
+  <li><a href="#why-the-regression-weight-combines-both" id="toc-why-the-regression-weight-combines-both" class="nav-link" data-scroll-target="#why-the-regression-weight-combines-both"><span class="header-section-number">3.16.2</span> Why the regression weight combines both</a></li>
+  <li><a href="#the-weight" id="toc-the-weight" class="nav-link" data-scroll-target="#the-weight"><span class="header-section-number">3.16.3</span> The weight</a></li>
+  <li><a href="#an-example-p4" id="toc-an-example-p4" class="nav-link" data-scroll-target="#an-example-p4"><span class="header-section-number">3.16.4</span> An example, <span class="math inline">\(p=4\)</span></a></li>
+  <li><a href="#the-two-excluded-coalitions" id="toc-the-two-excluded-coalitions" class="nav-link" data-scroll-target="#the-two-excluded-coalitions"><span class="header-section-number">3.16.5</span> The two excluded coalitions</a></li>
+  </ul></li>
+  <li><a href="#the-same-example-in-matrix-form" id="toc-the-same-example-in-matrix-form" class="nav-link" data-scroll-target="#the-same-example-in-matrix-form"><span class="header-section-number">3.17</span> The same example in matrix form</a>
+  <ul class="collapse">
+  <li><a href="#why-the-full-coalition-constraint-matters" id="toc-why-the-full-coalition-constraint-matters" class="nav-link" data-scroll-target="#why-the-full-coalition-constraint-matters"><span class="header-section-number">3.17.1</span> Why the full-coalition constraint matters</a></li>
+  </ul></li>
+  <li><a href="#sampling-coalitions" id="toc-sampling-coalitions" class="nav-link" data-scroll-target="#sampling-coalitions"><span class="header-section-number">3.18</span> Sampling coalitions</a></li>
+  <li><a href="#treeshap" id="toc-treeshap" class="nav-link" data-scroll-target="#treeshap"><span class="header-section-number">3.19</span> TreeSHAP</a>
+  <ul class="collapse">
+  <li><a href="#a-small-tree-worked-by-hand" id="toc-a-small-tree-worked-by-hand" class="nav-link" data-scroll-target="#a-small-tree-worked-by-hand"><span class="header-section-number">3.19.1</span> A small tree, worked by hand</a></li>
+  <li><a href="#tree-path-dependent-and-interventional-treeshap" id="toc-tree-path-dependent-and-interventional-treeshap" class="nav-link" data-scroll-target="#tree-path-dependent-and-interventional-treeshap"><span class="header-section-number">3.19.2</span> Tree-path-dependent and interventional TreeSHAP</a></li>
+  <li><a href="#kernelshap-and-treeshap-compared" id="toc-kernelshap-and-treeshap-compared" class="nav-link" data-scroll-target="#kernelshap-and-treeshap-compared"><span class="header-section-number">3.19.3</span> KernelSHAP and TreeSHAP compared</a></li>
+  </ul></li>
+  <li><a href="#classification-and-the-output-scale" id="toc-classification-and-the-output-scale" class="nav-link" data-scroll-target="#classification-and-the-output-scale"><span class="header-section-number">3.20</span> Classification and the output scale</a></li>
+  <li><a href="#linear-regression-as-a-special-case" id="toc-linear-regression-as-a-special-case" class="nav-link" data-scroll-target="#linear-regression-as-a-special-case"><span class="header-section-number">3.21</span> Linear regression as a special case</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">How SHAP and KernelSHAP work</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="what-are-we-trying-to-explain" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="what-are-we-trying-to-explain"><span class="header-section-number">3.1</span> What are we trying to explain?</h2>
+<p>Suppose a fitted model uses three features,</p>
+<p><span class="math display">\[A,\quad B,\quad C.\]</span></p>
+<p>For one observation, the full model output is</p>
+<p><span class="math display">\[v(A,B,C) = 19.\]</span></p>
+<p>Suppose the background model value, the model’s average output over a reference sample, is</p>
+<p><span class="math display">\[v(\varnothing) = 10.\]</span></p>
+<p>There are therefore</p>
+<p><span class="math display">\[19 - 10 = 9\]</span></p>
+<p>units of prediction to attribute to the three features. This is not a decomposition of the observed outcome that generated the training data, and it is not a statement about noise or residuals. It is a decomposition of the fitted model’s output for one specific observation, relative to that model’s own average output over a reference sample.</p>
+</section>
+<section id="coalitions-and-the-value-function" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="coalitions-and-the-value-function"><span class="header-section-number">3.2</span> Coalitions and the value function</h2>
+<p>To talk about “some of the features” precisely, we need a name for a subset of features, and a name for the value the model produces from that subset.</p>
+<p>Let</p>
+<p><span class="math display">\[F = \{A, B, C\}\]</span></p>
+<p>be the complete set of features. A coalition is any subset of <span class="math inline">\(F\)</span>. For three features, the possible coalitions are</p>
+<p><span class="math display">\[\varnothing,\ \{A\},\ \{B\},\ \{C\},\ \{A,B\},\ \{A,C\},\ \{B,C\},\ \{A,B,C\}.\]</span></p>
+<p>A coalition tells us which of the observation’s feature values are treated as known for one particular calculation. <span class="math inline">\(\{A\}\)</span> means “treat <span class="math inline">\(A\)</span>’s value as known, and treat <span class="math inline">\(B\)</span> and <span class="math inline">\(C\)</span> as unavailable.” <span class="math inline">\(\{A,B,C\}\)</span> means every feature is known, which is the ordinary situation of asking the model for a prediction.</p>
+<p>We write <span class="math inline">\(S\)</span> for one coalition, so <span class="math inline">\(S \subseteq F\)</span>. Two more pieces of notation are used constantly from here on, and it is worth keeping them separate in your head, because they answer different questions.</p>
+<p><span class="math inline">\(S\)</span> is a set. It tells you <em>which</em> features are in the coalition. For example, <span class="math inline">\(S = \{B, C\}\)</span>.</p>
+<p><span class="math inline">\(|S|\)</span> is a number: how many features are in that set. For <span class="math inline">\(S = \{B,C\}\)</span>, <span class="math inline">\(|S| = 2\)</span>.</p>
+<p>We also write <span class="math inline">\(p\)</span> for the total number of features under consideration, regardless of which coalition we are looking at. Here <span class="math inline">\(F = \{A,B,C\}\)</span>, so <span class="math inline">\(p = 3\)</span>. A coalition can contain anywhere from none of these features up to all of them: with <span class="math inline">\(p=3\)</span>, <span class="math inline">\(S=\{B\}\)</span> has <span class="math inline">\(|S|=1\)</span>, and <span class="math inline">\(S=\{B,C\}\)</span> has <span class="math inline">\(|S|=2\)</span>. Later in this chapter we will use a five-feature example where, say, <span class="math inline">\(S = \{A, D\}\)</span> has <span class="math inline">\(|S| = 2\)</span>. There is no conflict between <span class="math inline">\(p=5\)</span> and <span class="math inline">\(|S|=2\)</span>, because <span class="math inline">\(p\)</span> counts every feature under consideration and <span class="math inline">\(|S|\)</span> counts only the features inside this one coalition.</p>
+<p>For a coalition <span class="math inline">\(S\)</span>, define</p>
+<p><span class="math display">\[v(S)\]</span></p>
+<p>as the value assigned to that coalition. For now, treat these as given numbers, exactly as you would read them off a table:</p>
+<p><span class="math display">\[v(\varnothing)=10,\quad v(A)=14,\quad v(B)=12,\quad v(C)=11,\]</span></p>
+<p><span class="math display">\[v(A,B)=18,\quad v(A,C)=15,\quad v(B,C)=13,\quad v(A,B,C)=19.\]</span></p>
+<p>These eight numbers are used consistently for the rest of the derivation. Later in the chapter we will define precisely how a fitted machine learning model produces a number like <span class="math inline">\(v(\{A\})=14\)</span> in the first place, through masking and averaging. Until then, <span class="math inline">\(v(S)\)</span> is simply a function that returns one number for each of the <span class="math inline">\(2^{p}\)</span> possible coalitions, and the derivation of the Shapley value only needs that table, not yet the mechanism that produced it.</p>
+</section>
+<section id="contribution-in-different-coalitions" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="contribution-in-different-coalitions"><span class="header-section-number">3.3</span> Contribution in different coalitions</h2>
+<p>A natural first idea is to ask what a feature is worth when it joins last, after every other feature is already in place, and stop there. Consider feature <span class="math inline">\(A\)</span>, and ask what it adds in four different contexts: joining last, after each of the other features individually, and joining first, into an empty coalition.</p>
+<p>Added last, joining <span class="math inline">\(\{B,C\}\)</span> to make <span class="math inline">\(\{A,B,C\}\)</span>:</p>
+<p><span class="math display">\[v(A,B,C) - v(B,C) = 19 - 13 = 6.\]</span></p>
+<p>Added after only <span class="math inline">\(B\)</span>, joining <span class="math inline">\(\{B\}\)</span> to make <span class="math inline">\(\{A,B\}\)</span>:</p>
+<p><span class="math display">\[v(A,B) - v(B) = 18 - 12 = 6.\]</span></p>
+<p>Added after only <span class="math inline">\(C\)</span>, joining <span class="math inline">\(\{C\}\)</span> to make <span class="math inline">\(\{A,C\}\)</span>:</p>
+<p><span class="math display">\[v(A,C) - v(C) = 15 - 11 = 4.\]</span></p>
+<p>Added first, joining <span class="math inline">\(\varnothing\)</span> to make <span class="math inline">\(\{A\}\)</span>:</p>
+<p><span class="math display">\[v(A) - v(\varnothing) = 14 - 10 = 4.\]</span></p>
+<p>Four contexts, four different numbers for the same feature: 6, 6, 4, 4. This is the same pattern <a href="intuition.html#fig-context-dependent" class="quarto-xref">Figure&nbsp;<span>1.3</span></a> showed in the previous chapter. <span class="math inline">\(A\)</span> does not have one context-independent contribution, so no single one of these four differences can be called “the” contribution of <span class="math inline">\(A\)</span>. The rest of this chapter is about combining all four correctly, rather than picking one of them.</p>
+</section>
+<section id="averaging-over-all-feature-orders" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="averaging-over-all-feature-orders"><span class="header-section-number">3.4</span> Averaging over all feature orders</h2>
+<p>With three features, there are</p>
+<p><span class="math display">\[3! = 6\]</span></p>
+<p>possible orders in which <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(C\)</span> could be added, one at a time, starting from <span class="math inline">\(\varnothing\)</span> and finishing at <span class="math inline">\(\{A,B,C\}\)</span>. For example, the order <span class="math inline">\(A,B,C\)</span> means</p>
+<p><span class="math display">\[\varnothing \to \{A\} \to \{A,B\} \to \{A,B,C\}.\]</span></p>
+<p>For each order, we can ask how much <span class="math inline">\(A\)</span> adds at the point where it enters.</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Order</th>
+<th>A’s contribution when it enters</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A, B, C</td>
+<td><span class="math inline">\(v(A)-v(\varnothing) = 4\)</span></td>
+</tr>
+<tr class="even">
+<td>A, C, B</td>
+<td><span class="math inline">\(v(A)-v(\varnothing) = 4\)</span></td>
+</tr>
+<tr class="odd">
+<td>B, A, C</td>
+<td><span class="math inline">\(v(A,B)-v(B) = 6\)</span></td>
+</tr>
+<tr class="even">
+<td>C, A, B</td>
+<td><span class="math inline">\(v(A,C)-v(C) = 4\)</span></td>
+</tr>
+<tr class="odd">
+<td>B, C, A</td>
+<td><span class="math inline">\(v(A,B,C)-v(B,C) = 6\)</span></td>
+</tr>
+<tr class="even">
+<td>C, B, A</td>
+<td><span class="math inline">\(v(A,B,C)-v(B,C) = 6\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Averaging the six values, <span class="math inline">\((4+4+6+4+6+6)/6 = 5\)</span>, gives</p>
+<p><span class="math display">\[\phi_A = 5.\]</span></p>
+<p>The same bookkeeping for <span class="math inline">\(B\)</span> and <span class="math inline">\(C\)</span>, done more compactly, gives</p>
+<p><span class="math display">\[\phi_B = 3,\qquad \phi_C = 1.\]</span></p>
+<p>As a check,</p>
+<p><span class="math display">\[10 + 5 + 3 + 1 = 19,\]</span></p>
+<p>the full prediction. <span class="math inline">\(\phi_A, \phi_B, \phi_C\)</span> are the <strong>Shapley values</strong> of <span class="math inline">\(A\)</span>, <span class="math inline">\(B\)</span>, and <span class="math inline">\(C\)</span> for this observation, and computing every feature’s Shapley value this way is what SHAP does.</p>
+<p>The same six pairwise differences can be read backward, as the amount lost when a feature is removed from the full coalition instead of added to an empty one. The number is identical either way. Only the direction of reading changes. The rest of the derivation sticks to the adding direction, because it connects directly to the next section.</p>
+</section>
+<section id="marginal-contribution" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="marginal-contribution"><span class="header-section-number">3.5</span> Marginal contribution</h2>
+<p>Section by section, the calculations above all had the same shape: some coalition <span class="math inline">\(S\)</span> is already in place, and we ask what feature <span class="math inline">\(j\)</span> adds when it joins. Take one specific case: <span class="math inline">\(S = \{B\}\)</span> and <span class="math inline">\(j = A\)</span>. Before <span class="math inline">\(A\)</span> enters, the coalition is <span class="math inline">\(\{B\}\)</span>. After <span class="math inline">\(A\)</span> enters, it is <span class="math inline">\(\{A,B\}\)</span>. So <span class="math inline">\(A\)</span>’s contribution in this context is</p>
+<p><span class="math display">\[v(\{A,B\}) - v(\{B\}) = 18 - 12 = 6.\]</span></p>
+<p>In general, for a feature <span class="math inline">\(j\)</span> and a coalition <span class="math inline">\(S\)</span>, the marginal contribution of <span class="math inline">\(j\)</span> to <span class="math inline">\(S\)</span> is</p>
+<p><span class="math display">\[v(S \cup \{j\}) - v(S).\]</span></p>
+<p><span class="math inline">\(S \cup \{j\}\)</span> is read “<span class="math inline">\(S\)</span> union <span class="math inline">\(j\)</span>”: the coalition <span class="math inline">\(S\)</span> with <span class="math inline">\(j\)</span> added. Here, <span class="math inline">\(j\)</span> is the feature whose contribution we are measuring, and <span class="math inline">\(S\)</span> is the set of features already present before <span class="math inline">\(j\)</span> enters. <span class="math inline">\(S\)</span> must not contain <span class="math inline">\(j\)</span>, since <span class="math inline">\(j\)</span> is precisely the feature being added to it. This condition, <span class="math inline">\(S \subseteq F \setminus \{j\}\)</span>, reappears in every formula from here on.</p>
+</section>
+<section id="from-feature-orders-to-shapley-weights" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="from-feature-orders-to-shapley-weights"><span class="header-section-number">3.6</span> From feature orders to Shapley weights</h2>
+<p>The average computed above, over six orders, can be reorganized as a sum over coalitions instead of a sum over orders. Rather than listing all six orders, we can ask, for each possible coalition <span class="math inline">\(S\)</span>: in how many of the six orders does <span class="math inline">\(S\)</span> contain exactly the features that arrive before <span class="math inline">\(A\)</span>?</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(S\)</span> before <span class="math inline">\(A\)</span></th>
+<th>Orders</th>
+<th style="text-align: right;">Count</th>
+<th style="text-align: right;">Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\varnothing\)</span></td>
+<td>ABC, ACB</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><span class="math inline">\(2/6 = 1/3\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\{B\}\)</span></td>
+<td>BAC</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;"><span class="math inline">\(1/6\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\{C\}\)</span></td>
+<td>CAB</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;"><span class="math inline">\(1/6\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\{B,C\}\)</span></td>
+<td>BCA, CBA</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><span class="math inline">\(2/6 = 1/3\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>Each row’s weight is the fraction of all six orders in which exactly that coalition sits before <span class="math inline">\(A\)</span>. Multiplying each weight by <span class="math inline">\(A\)</span>’s contribution in that context, and summing, reproduces the same average as before:</p>
+<p><span class="math display">\[\phi_A = \tfrac13(4) + \tfrac16(6) + \tfrac16(4) + \tfrac13(6) = 5.\]</span></p>
+<p>The coalition <span class="math inline">\(\varnothing\)</span> occurs before <span class="math inline">\(A\)</span> in two of the six orders, so its contribution, 4, is effectively counted twice out of six. The coalition <span class="math inline">\(\{B\}\)</span> occurs before <span class="math inline">\(A\)</span> in only one order, so its contribution, 6, is counted once out of six. Weighting by how often each context occurs, and summing, is exactly the same arithmetic as averaging over the six orders directly.</p>
+<section id="a-formula-for-the-weight-with-any-number-of-features" class="level3" data-number="3.6.1">
+<h3 data-number="3.6.1" class="anchored" data-anchor-id="a-formula-for-the-weight-with-any-number-of-features"><span class="header-section-number">3.6.1</span> A formula for the weight, with any number of features</h3>
+<p>The four weights above, <span class="math inline">\(1/3, 1/6, 1/6, 1/3\)</span>, were read off a table built by listing all six orders. With more features, listing every order becomes impractical, so we derive the weight directly, instead of by enumeration.</p>
+<p>First, fix the symbols the derivation uses. <span class="math inline">\(p\)</span> is the total number of features under consideration. <span class="math inline">\(j\)</span> is the feature whose Shapley value we are calculating, the one whose contribution we are tracking. <span class="math inline">\(S\)</span> is one particular set of features that appear before <span class="math inline">\(j\)</span> in some feature order, so <span class="math inline">\(S\)</span> does not contain <span class="math inline">\(j\)</span>. <span class="math inline">\(s = |S|\)</span> is the number of features in that set. Since <span class="math inline">\(S\)</span> contains none of <span class="math inline">\(j\)</span> itself and can range from containing none of the other features up to all of them, <span class="math inline">\(s\)</span> can be any value from <span class="math inline">\(0\)</span> up to <span class="math inline">\(p-1\)</span>.</p>
+<p>We want to count how many of the <span class="math inline">\(p!\)</span> possible feature orders have exactly the features of <span class="math inline">\(S\)</span> arriving before <span class="math inline">\(j\)</span>, with every other feature arriving after <span class="math inline">\(j\)</span>. This count has two separate parts, because a complete order is built from two independent choices: how the features before <span class="math inline">\(j\)</span> are arranged among themselves, and how the features after <span class="math inline">\(j\)</span> are arranged among themselves.</p>
+<p><strong>Before <span class="math inline">\(j\)</span>.</strong> The <span class="math inline">\(s\)</span> features of <span class="math inline">\(S\)</span> can be arranged among themselves, in front of <span class="math inline">\(j\)</span>, in <span class="math inline">\(s!\)</span> ways. This is an ordinary count of arrangements: <span class="math inline">\(s\)</span> items can be lined up in <span class="math inline">\(s!\)</span> different orders.</p>
+<p><strong>After <span class="math inline">\(j\)</span>.</strong> Once <span class="math inline">\(S\)</span> and <span class="math inline">\(j\)</span> have used up <span class="math inline">\(s + 1\)</span> of the <span class="math inline">\(p\)</span> features, <span class="math inline">\(p - s - 1\)</span> features remain. The <span class="math inline">\(-1\)</span> accounts for <span class="math inline">\(j\)</span> itself: start from <span class="math inline">\(p\)</span> features in total, remove the <span class="math inline">\(s\)</span> features already placed in <span class="math inline">\(S\)</span>, and remove <span class="math inline">\(j\)</span>, which leaves <span class="math inline">\(p - s - 1\)</span>. These remaining features did not enter into <span class="math inline">\(j\)</span>’s marginal contribution at all, since that contribution only depends on which features were already present when <span class="math inline">\(j\)</span> joined. But they still have to go somewhere in a complete feature order, and different arrangements of them count as different orders. So they contribute a factor to the count, even though they do not change the value being counted: they can be arranged, after <span class="math inline">\(j\)</span>, in <span class="math inline">\((p-s-1)!\)</span> ways.</p>
+<p>Multiplying the two independent counts, the number of complete feature orders with exactly <span class="math inline">\(S\)</span> before <span class="math inline">\(j\)</span> is <span class="math inline">\(s! \, (p-s-1)!\)</span>. Out of <span class="math inline">\(p!\)</span> orders in total, the fraction is</p>
+<p><span class="math display">\[\frac{s!\,(p-s-1)!}{p!}.\]</span></p>
+<p>A concrete example makes both parts of this count visible at once. Suppose <span class="math inline">\(p=5\)</span>, with features <span class="math inline">\(\{A,B,C,D,E\}\)</span>, and take <span class="math inline">\(j = C\)</span> and <span class="math inline">\(S = \{A,D\}\)</span>, so <span class="math inline">\(s = |S| = 2\)</span>. The two remaining features, neither in <span class="math inline">\(S\)</span> nor equal to <span class="math inline">\(j\)</span>, are <span class="math inline">\(B\)</span> and <span class="math inline">\(E\)</span>, and <span class="math inline">\(p - s - 1 = 5 - 2 - 1 = 2\)</span> matches that count directly. The complete orders with <span class="math inline">\(A\)</span> and <span class="math inline">\(D\)</span> before <span class="math inline">\(C\)</span>, and <span class="math inline">\(B\)</span> and <span class="math inline">\(E\)</span> after <span class="math inline">\(C\)</span>, are exactly these four:</p>
+<p><span class="math display">\[A,D,C,B,E \qquad A,D,C,E,B \qquad D,A,C,B,E \qquad D,A,C,E,B.\]</span></p>
+<p>Every one of them has <span class="math inline">\(\{A,D\}\)</span> before <span class="math inline">\(C\)</span>, but they differ in which of <span class="math inline">\(A,D\)</span> comes first, and which of <span class="math inline">\(B,E\)</span> comes first. Two choices before <span class="math inline">\(C\)</span>, from <span class="math inline">\(\{A,D\}\)</span>, times two choices after <span class="math inline">\(C\)</span>, from <span class="math inline">\(\{B,E\}\)</span>, gives <span class="math inline">\(2! \times 2! = 4\)</span> orders, matching <span class="math inline">\(s!\,(p-s-1)!\)</span> directly. <span class="math inline">\(C\)</span>’s marginal contribution, <span class="math inline">\(v(\{A,C,D\}) - v(\{A,D\})\)</span>, is the same number in all four of these orders, since it only depends on <span class="math inline">\(S=\{A,D\}\)</span> being in place before <span class="math inline">\(C\)</span>. What changes from one order to the next is only how <span class="math inline">\(B\)</span> and <span class="math inline">\(E\)</span> happen to be arranged afterward, which has no bearing on that contribution. They still have to be counted, because the fraction <span class="math inline">\(s!(p-s-1)!/p!\)</span> is a fraction of complete feature orders, and each distinct arrangement of <span class="math inline">\(B\)</span> and <span class="math inline">\(E\)</span> is a distinct complete order, even though all four give <span class="math inline">\(C\)</span> the same contribution.</p>
+<p>This fraction is the share of all feature orders in which exactly the features in <span class="math inline">\(S\)</span> occur before <span class="math inline">\(j\)</span>. For <span class="math inline">\(S = \{B\}\)</span> in the three-feature example, <span class="math inline">\(p=3\)</span> and <span class="math inline">\(s=1\)</span>, giving <span class="math inline">\(\frac{1! \cdot 1!}{3!} = \frac16\)</span>, matching the table above. For <span class="math inline">\(S = \{B,C\}\)</span>, <span class="math inline">\(s=2\)</span>, giving <span class="math inline">\(\frac{2! \cdot 0!}{3!} = \frac13\)</span>, also matching. Written with <span class="math inline">\(s = |S|\)</span>, the fraction is</p>
+<p><span class="math display">\[\frac{|S|!\,(p-|S|-1)!}{p!}.\]</span></p>
+</section>
+</section>
+<section id="the-shapley-value-formula" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="the-shapley-value-formula"><span class="header-section-number">3.7</span> The Shapley value formula</h2>
+<p>In words, before writing the compact version: a feature’s Shapley value is a sum, over every context it could enter, of the weight of that context times its contribution in that context.</p>
+<p><span class="math display">\[\phi_j
+=
+\sum_{S \subseteq F \setminus \{j\}}
+\frac{|S|!\,(p-|S|-1)!}{p!}
+\Big[
+v(S \cup \{j\}) - v(S)
+\Big].\]</span></p>
+<p>Reading each piece: <span class="math inline">\(p\)</span> is the total number of features. <span class="math inline">\(j\)</span> is the feature whose Shapley value we are computing. <span class="math inline">\(S\)</span> ranges over every coalition not containing <span class="math inline">\(j\)</span>. <span class="math inline">\(|S|\)</span> is the size of that coalition. The fraction is the share of all feature orders in which exactly <span class="math inline">\(S\)</span> arrives before <span class="math inline">\(j\)</span>, derived above. The bracketed term is <span class="math inline">\(j\)</span>’s marginal contribution when added to <span class="math inline">\(S\)</span>.</p>
+<p>Applying this to <span class="math inline">\(\phi_A\)</span> with <span class="math inline">\(p=3\)</span> reproduces the table from the previous section exactly: the four coalitions not containing <span class="math inline">\(A\)</span> are <span class="math inline">\(\varnothing, \{B\}, \{C\}, \{B,C\}\)</span>, with weights <span class="math inline">\(\frac13, \frac16, \frac16, \frac13\)</span> and contributions <span class="math inline">\(4, 6, 4, 6\)</span>, giving <span class="math inline">\(\phi_A = 5\)</span> as before.</p>
+<p><span class="math inline">\(\phi_j\)</span> is the average contribution of feature <span class="math inline">\(j\)</span> across every context it could enter, weighted by how often each context occurs across all feature orders. Writing <span class="math inline">\(\phi_0 \equiv v(\varnothing)\)</span>, the fitted model’s output decomposes as</p>
+<p><span class="math display">\[f(x) = \phi_0 + \sum_{j=1}^{p} \phi_j,\]</span></p>
+<p>the same additivity checked numerically in the previous chapter. <span class="math inline">\(\phi_0\)</span> is the baseline, and each <span class="math inline">\(\phi_j\)</span> is that feature’s share of the distance between the baseline and the prediction.</p>
+<p>Once a <span class="math inline">\(\phi_{ij}\)</span> has been computed for every feature <span class="math inline">\(j\)</span> and every observation <span class="math inline">\(i\)</span> in a dataset, a single number summarizing feature <span class="math inline">\(j\)</span> across the whole dataset is usually built from the mean of <span class="math inline">\(|\phi_{ij}|\)</span> rather than <span class="math inline">\(\phi_{ij}\)</span> itself, since positive and negative contributions would otherwise cancel. This is the same global importance measure used in the previous chapter. The underlying <span class="math inline">\(\phi_{ij}\)</span> values are what this section derives.</p>
+</section>
+<section id="properties-of-shapley-values" class="level2" data-number="3.8">
+<h2 data-number="3.8" class="anchored" data-anchor-id="properties-of-shapley-values"><span class="header-section-number">3.8</span> Properties of Shapley values</h2>
+<p>The weighting derived above is not the only way one could imagine splitting <span class="math inline">\(v(F) - v(\varnothing)\)</span> among the <span class="math inline">\(p\)</span> features, but Shapley (1953) showed it is the only way that satisfies four properties simultaneously.</p>
+<p><strong>Efficiency.</strong> The contributions add up exactly: <span class="math inline">\(\sum_j \phi_j = v(F) - v(\varnothing)\)</span>. Nothing is left unexplained and nothing is double-counted.</p>
+<p><strong>Symmetry.</strong> If two features make identical marginal contributions to every coalition they could join, <span class="math inline">\(v(S \cup \{i\}) = v(S \cup \{j\})\)</span> for every <span class="math inline">\(S\)</span> containing neither, then <span class="math inline">\(\phi_i = \phi_j\)</span>.</p>
+<p><strong>Dummy (or null) player.</strong> A “player,” in the cooperative-game vocabulary <span class="math inline">\(F\)</span> and <span class="math inline">\(S\)</span> were borrowed from, is what this course calls a feature. If a feature never changes the value of any coalition it joins, <span class="math inline">\(v(S \cup \{j\}) = v(S)\)</span> for every <span class="math inline">\(S\)</span>, then <span class="math inline">\(\phi_j = 0\)</span>. In the simulated example from the previous chapter, x4 did not enter the data-generating equation, but the fitted model can still use it slightly, because it was trained on a finite sample. Its mean absolute SHAP value, 0.066, is therefore small rather than necessarily exactly zero.</p>
+<p><strong>Additivity (over games).</strong> This is easy to confuse with efficiency, since both get called “additivity,” but they say different things. Efficiency describes summing one game’s <span class="math inline">\(\phi_j\)</span> values across features. Additivity over games describes combining two separate games: if two value functions <span class="math inline">\(v_1\)</span> and <span class="math inline">\(v_2\)</span> are added into one combined game <span class="math inline">\(v = v_1 + v_2\)</span>, the Shapley values also add, <span class="math inline">\(\phi_j(v) = \phi_j(v_1) + \phi_j(v_2)\)</span>. For model explanation, this applies most directly to an ensemble whose prediction is a sum of sub-model predictions, such as a boosted model considered as a sum of trees: a feature’s total SHAP value is the sum of its SHAP value within each tree.</p>
+</section>
+<section id="how-masking-defines-a-coalition-value" class="level2" data-number="3.9">
+<h2 data-number="3.9" class="anchored" data-anchor-id="how-masking-defines-a-coalition-value"><span class="header-section-number">3.9</span> How masking defines a coalition value</h2>
+<p>So far, <span class="math inline">\(v(S)\)</span> has been treated as a table of given numbers. We now define how those numbers are obtained from a fitted model. A fitted model still expects every one of its <span class="math inline">\(p\)</span> inputs. It has no built-in notion of “the value when only <span class="math inline">\(A\)</span> is known.” We saw the mechanism visually in the previous chapter: retained features are fixed at the observation’s values, masked features are filled from a background dataset, and the model’s outputs on the resulting hybrid rows are averaged.</p>
+<p>Suppose the observation being explained is</p>
+<p><span class="math display">\[x = (65, 32, 150)\]</span></p>
+<p>for age, BMI, and systolic blood pressure, with a small background dataset of four patients. To compute <span class="math inline">\(v(\{\text{age}\})\)</span>, age is kept at 65, the value of the observation being explained, while BMI and blood pressure are filled in from each of the four background patients in turn, producing four hybrid rows. The fitted model is evaluated on each row, and the four outputs are averaged, giving <span class="math inline">\(v(\{\text{age}\}) = 14.00\)</span>.</p>
+<p>This construction is written with expectation notation as</p>
+<p><span class="math display">\[v(S) = \mathbb{E}\big[f(x_S, X_{\bar S})\big].\]</span></p>
+<p><span class="math inline">\(S\)</span> is the set of retained features. <span class="math inline">\(x_S\)</span> is the observation’s values for those features, held fixed. <span class="math inline">\(\bar S\)</span> denotes the features not in <span class="math inline">\(S\)</span>. <span class="math inline">\(X_{\bar S}\)</span> is a random draw of those masked features from the background distribution. <span class="math inline">\(f(x_S, X_{\bar S})\)</span> is the fitted model evaluated on the resulting hybrid row. The expectation <span class="math inline">\(\mathbb{E}[\cdot]\)</span> averages over the randomness in <span class="math inline">\(X_{\bar S}\)</span>, that is, over which background row supplied the masked values. With a finite background sample of <span class="math inline">\(m\)</span> rows, this is estimated by</p>
+<p><span class="math display">\[\hat v(S) = \frac{1}{m} \sum_{r=1}^{m} f\big(x_S, X_{\bar S}^{(r)}\big),\]</span></p>
+<p>which is exactly the arithmetic behind <span class="math inline">\(v(\{\text{age}\}) = 14.00\)</span>: four hybrid rows, four model evaluations, one average.</p>
+<p>Two special cases of this mechanism anchor the two ends of the decomposition. For <span class="math inline">\(S = \varnothing\)</span>, nothing is retained, so every feature is drawn from the background:</p>
+<p><span class="math display">\[v(\varnothing) = \mathbb{E}[f(X)] \approx \frac{1}{m}\sum_{r=1}^m f(X_r),\]</span></p>
+<p>the SHAP base value used throughout the previous chapter. For <span class="math inline">\(S = F\)</span>, the full feature set, nothing is masked, so <span class="math inline">\(v(F) = f(x)\)</span>, the model’s actual prediction. Every intermediate coalition’s value is built from the same masking-and-averaging mechanism, between these two endpoints.</p>
+</section>
+<section id="marginal-and-conditional-shap" class="level2" data-number="3.10">
+<h2 data-number="3.10" class="anchored" data-anchor-id="marginal-and-conditional-shap"><span class="header-section-number">3.10</span> Marginal and conditional SHAP</h2>
+<p>The construction above fills <span class="math inline">\(X_{\bar S}\)</span> by drawing from the background, without conditioning on the retained values <span class="math inline">\(x_S\)</span>. This is called the <strong>marginal</strong>, or <strong>interventional</strong>, value function:</p>
+<p><span class="math display">\[v_{\text{marginal}}(S) = \mathbb{E}_{X_{\bar S}}\big[f(x_S, X_{\bar S})\big].\]</span></p>
+<p>The term “interventional” refers to setting <span class="math inline">\(S\)</span> to <span class="math inline">\(x_S\)</span> directly and letting the rest vary as they do in the background, breaking whatever statistical dependence the masked features have with the retained ones in the real data. It does not by itself mean that the resulting SHAP value estimates a causal effect of changing that feature in the world. It describes how the masked features are filled in for this particular calculation, not a claim about cause and effect.</p>
+<p>When features are correlated, filling masked features without conditioning on the retained ones can produce combinations that rarely or never occur together. <a href="intuition.html#fig-correlated-hybrids" class="quarto-xref">Figure&nbsp;<span>1.12</span></a> in the previous chapter showed two variables correlated at about 0.9. Keeping one at a high observed value while filling the other from the background produced several hybrid rows that fall well outside the region where real, jointly observed data is found.</p>
+<p>An alternative is the <strong>conditional</strong> value function,</p>
+<p><span class="math display">\[v_{\text{conditional}}(S) = \mathbb{E}\big[f(X) \mid X_S = x_S\big],\]</span></p>
+<p>which averages over the conditional distribution of the masked features given the retained ones, respecting whatever correlation exists between them. The marginal and conditional value functions are not two approximations of the same quantity. They are built from two different rules for what a masked feature means, and can produce different Shapley values for the same model and the same observation. The conditional value function can assign a nonzero contribution to a feature the model never directly uses, if that feature carries information, through correlation, about another feature the model does use. The marginal value function answers how the model’s output changes if these specific inputs are set to these values, independent of how the other inputs happen to co-occur with them in the data. The conditional value function answers what the model tends to output when these input values are observed together, as they occur in the data. Neither is universally the right choice. They answer different questions.</p>
+<p>Which of these a given piece of software uses by default depends on the explainer, not on the package as a whole. <code>shap.TreeExplainer</code>, for instance, uses a tree-path-dependent calculation (covered later in this chapter) when no background data is supplied, and the marginal, interventional construction when an explicit background is supplied with <code>feature_perturbation="interventional"</code>. R’s <code>kernelshap</code> and <code>permshap</code> use the marginal construction whenever a background dataset is supplied, since that is the only construction they implement.</p>
+</section>
+<section id="why-exact-calculation-becomes-expensive" class="level2" data-number="3.11">
+<h2 data-number="3.11" class="anchored" data-anchor-id="why-exact-calculation-becomes-expensive"><span class="header-section-number">3.11</span> Why exact calculation becomes expensive</h2>
+<p>With <span class="math inline">\(p\)</span> features, <span class="math inline">\(2^p\)</span> counts the number of distinct coalitions, and <span class="math inline">\(p!\)</span> counts the number of feature orders. Both grow quickly.</p>
+<div id="tbl-growth" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3.1: Coalitions and feature orders grow far faster than the number of features itself.
+</figcaption>
+<div aria-describedby="tbl-growth-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: right;"><span class="math inline">\(p\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(2^p\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(p!\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">120</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">1,024</td>
+<td style="text-align: right;">3,628,800</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">32,768</td>
+<td style="text-align: right;"><span class="math inline">\(\approx 1.3\times10^{12}\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">1,048,576</td>
+<td style="text-align: right;"><span class="math inline">\(\approx 2.4\times10^{18}\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;"><span class="math inline">\(\approx 1.1\times10^{9}\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(\approx 2.7\times10^{32}\)</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p>The three-feature toy example enumerated all 8 coalitions directly. A model with 20 or 30 features, entirely ordinary in practice, cannot be handled by brute-force enumeration of coalitions or orders. KernelSHAP and TreeSHAP each address this, in different ways. KernelSHAP is introduced first, since it works with any model.</p>
+</section>
+<section id="representing-coalitions-as-binary-masks" class="level2" data-number="3.12">
+<h2 data-number="3.12" class="anchored" data-anchor-id="representing-coalitions-as-binary-masks"><span class="header-section-number">3.12</span> Representing coalitions as binary masks</h2>
+<p><span class="math inline">\(\{A,C\}\)</span>, the coalition retaining <span class="math inline">\(A\)</span> and <span class="math inline">\(C\)</span> while masking <span class="math inline">\(B\)</span>, can be written as the binary vector <span class="math inline">\((1,0,1)\)</span>: a 1 for each retained feature, a 0 for each masked one, in a fixed feature order. In general, a coalition is written as</p>
+<p><span class="math display">\[z' = (z_1', \ldots, z_p'), \qquad z_j' \in \{0, 1\},\]</span></p>
+<p>with <span class="math inline">\(z_j' = 1\)</span> meaning feature <span class="math inline">\(j\)</span> is retained and <span class="math inline">\(z_j' = 0\)</span> meaning feature <span class="math inline">\(j\)</span> is masked.</p>
+<div class="visual-card">
+<div id="fig-coalition-masks" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A table with eight rows, each showing a three-digit binary code, a colored 0/1 indicator for each of features A, B, and C, and the corresponding set of retained features.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-coalition-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/14-coalition-masks.svg" class="img-fluid figure-img" alt="A table with eight rows, each showing a three-digit binary code, a colored 0/1 indicator for each of features A, B, and C, and the corresponding set of retained features.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-coalition-masks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: Every coalition of three features written as a binary mask.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-coalition-masks" class="quarto-xref">Figure&nbsp;<span>3.1</span></a> lists all eight binary masks for three features, the same eight coalitions from the opening table, in the representation KernelSHAP computes with.</p>
+</section>
+<section id="kernelshap-fits-an-additive-explanation-model" class="level2" data-number="3.13">
+<h2 data-number="3.13" class="anchored" data-anchor-id="kernelshap-fits-an-additive-explanation-model"><span class="header-section-number">3.13</span> KernelSHAP fits an additive explanation model</h2>
+<p>KernelSHAP’s goal is to find coefficients <span class="math inline">\(\phi_0, \phi_1, \ldots, \phi_p\)</span> such that a linear function of <span class="math inline">\(z'\)</span>,</p>
+<p><span class="math display">\[g(z') = \phi_0 + \sum_{j=1}^{p} \phi_j z_j',\]</span></p>
+<p>approximates <span class="math inline">\(v(S)\)</span> for every coalition <span class="math inline">\(S\)</span>, where <span class="math inline">\(z'\)</span> is the mask corresponding to <span class="math inline">\(S\)</span>.</p>
+<p>Four objects are in play here, and it is worth keeping them distinct.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>What it is</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(f(x)\)</span></td>
+<td>the original fitted model, evaluated on ordinary feature values <span class="math inline">\(x\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(x\)</span></td>
+<td>the observation’s feature values</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(z'\)</span></td>
+<td>a binary coalition mask</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(g(z')\)</span></td>
+<td>the small additive model KernelSHAP fits, evaluated on a coalition mask</td>
+</tr>
+</tbody>
+</table>
+<p><span class="math inline">\(f(x)\)</span> can be arbitrarily nonlinear: built from decision trees, containing thresholds, containing interactions between features. <span class="math inline">\(g(z')\)</span> is not that model. It operates in a different space, the space of binary coalition masks, and it is additive in that space by construction: a deliberate simplification that makes one number per feature extractable at all. Fitting <span class="math inline">\(g\)</span> well does not require <span class="math inline">\(f\)</span> to be simple, and <span class="math inline">\(g\)</span> being additive says nothing about whether <span class="math inline">\(f\)</span> is.</p>
+</section>
+<section id="why-an-additive-model-cannot-fit-every-coalition-exactly" class="level2" data-number="3.14">
+<h2 data-number="3.14" class="anchored" data-anchor-id="why-an-additive-model-cannot-fit-every-coalition-exactly"><span class="header-section-number">3.14</span> Why an additive model cannot fit every coalition exactly</h2>
+<p>Return to the toy example. From the single-feature values,</p>
+<p><span class="math display">\[v(A) - v(\varnothing) = 4, \qquad v(B) - v(\varnothing) = 2,\]</span></p>
+<p>an additive model that used exactly these two numbers as <span class="math inline">\(\phi_A\)</span> and <span class="math inline">\(\phi_B\)</span> would predict the two-feature coalition to be worth <span class="math inline">\(\phi_A + \phi_B = 6\)</span> more than the baseline. The actual value is</p>
+<p><span class="math display">\[v(A,B) - v(\varnothing) = 18 - 10 = 8.\]</span></p>
+<p>The two-unit gap comes from the interaction between <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span> inside the original function, <span class="math inline">\(f(A,B,C) = 10 + 2A + 2B + 2C + AB\)</span>, which contains an <span class="math inline">\(AB\)</span> term with no counterpart in a model that assigns one fixed coefficient per feature. An additive explanation model, restricted to one coefficient per feature, cannot reproduce <span class="math inline">\(v(\varnothing)\)</span>, <span class="math inline">\(v(A)\)</span>, <span class="math inline">\(v(B)\)</span>, and <span class="math inline">\(v(A,B)\)</span> simultaneously whenever an interaction like this is present. It has to distribute the interaction’s effect across the coefficients somehow. The Shapley weighting derived earlier is, among every way of doing that distribution, the one satisfying efficiency, symmetry, the dummy property, and additivity over games.</p>
+</section>
+<section id="fitting-kernelshap-with-weighted-least-squares" class="level2" data-number="3.15">
+<h2 data-number="3.15" class="anchored" data-anchor-id="fitting-kernelshap-with-weighted-least-squares"><span class="header-section-number">3.15</span> Fitting KernelSHAP with weighted least squares</h2>
+<p>Consider one coalition, <span class="math inline">\(S = \{A,C\}\)</span>, with mask <span class="math inline">\(z' = (1,0,1)\)</span>. The additive model’s prediction for this coalition is</p>
+<p><span class="math display">\[g(z') = \phi_0 + \phi_A + \phi_C,\]</span></p>
+<p>since the <span class="math inline">\(B\)</span> term drops out when <span class="math inline">\(z_B' = 0\)</span>. The actual coalition value is <span class="math inline">\(v(\{A,C\}) = 15\)</span>, so the error for this one coalition is</p>
+<p><span class="math display">\[v(\{A,C\}) - (\phi_0 + \phi_A + \phi_C).\]</span></p>
+<p>KernelSHAP computes an error like this for every coalition, squares each one, and fits <span class="math inline">\(\phi_0, \ldots, \phi_p\)</span> to minimize a weighted sum of these squared errors:</p>
+<p><span class="math display">\[\min_{\phi}
+\sum_{S \subseteq F}
+\pi(S)
+\Big[
+v(S) - \Big(\phi_0 + \sum_{j \in S} \phi_j\Big)
+\Big]^2.\]</span></p>
+<p>For each coalition <span class="math inline">\(S\)</span>: <span class="math inline">\(v(S)\)</span> is the value computed by masking, as derived above. <span class="math inline">\(\phi_0 + \sum_{j\in S}\phi_j\)</span> is the additive model’s approximation to that coalition. Their difference is squared so that overestimates and underestimates are penalized the same way. <span class="math inline">\(\pi(S)\)</span>, the SHAP kernel, weights coalition <span class="math inline">\(S\)</span>’s contribution to the total error. It is derived in the next section. Summing over every coalition gives one number, and the coefficients that minimize it are what KernelSHAP returns. Lundberg and Lee (2017) showed that with the right choice of <span class="math inline">\(\pi(S)\)</span>, and two constraints described below, the minimizer of this weighted least squares problem is exactly the Shapley value vector derived earlier by averaging over feature orders. A combinatorial average and a regression produce the same numbers.</p>
+</section>
+<section id="the-shap-kernel" class="level2" data-number="3.16">
+<h2 data-number="3.16" class="anchored" data-anchor-id="the-shap-kernel"><span class="header-section-number">3.16</span> The SHAP kernel</h2>
+<p>Two weights have appeared in this chapter so far, and they are easy to conflate because both are, in some sense, a weight on a coalition. Write</p>
+<p><span class="math display">\[\alpha_s = \frac{s!\,(p-s-1)!}{p!}\]</span></p>
+<p>for the Shapley weight derived earlier, now expressed as a function of <span class="math inline">\(s = |S|\)</span> alone, since that derivation showed it depends only on the size of <span class="math inline">\(S\)</span>, never on which particular features <span class="math inline">\(S\)</span> contains. <span class="math inline">\(\alpha_s\)</span> weights a single feature’s marginal contribution inside the permutation-average formula for <span class="math inline">\(\phi_j\)</span>: it is the share of feature orders in which exactly <span class="math inline">\(s\)</span> features sit before the one entering. <span class="math inline">\(\pi(S)\)</span>, the SHAP kernel named at the end of the previous section, is a different object, not yet derived. It weights an entire coalition’s row in the least squares problem set up above. These are not the same weight. The first belongs to the Shapley permutation average. The second is chosen so that the weighted regression reproduces that same Shapley allocation. The rest of this section derives <span class="math inline">\(\pi(S)\)</span> from <span class="math inline">\(\alpha_s\)</span>, rather than stating a formula for it and checking afterward that it happens to work.</p>
+<p>For what follows, write <span class="math inline">\(s = |S|\)</span> and restrict attention to <span class="math inline">\(1 \le s \le p-1\)</span>. The two boundary cases, <span class="math inline">\(s=0\)</span> and <span class="math inline">\(s=p\)</span>, are handled separately at the end of this section.</p>
+<section id="a-coalition-touches-the-permutation-average-twice" class="level3" data-number="3.16.1">
+<h3 data-number="3.16.1" class="anchored" data-anchor-id="a-coalition-touches-the-permutation-average-twice"><span class="header-section-number">3.16.1</span> A coalition touches the permutation average twice</h3>
+<p>A coalition <span class="math inline">\(S\)</span> of size <span class="math inline">\(s\)</span> shows up in the permutation average in two distinct roles, not one. First, <span class="math inline">\(S\)</span> can be the coalition immediately before some feature enters, in which case that feature’s marginal contribution is weighted by <span class="math inline">\(\alpha_s\)</span>, since <span class="math inline">\(s\)</span> features are already present when it enters. Second, <span class="math inline">\(S\)</span> can be the coalition immediately after some other feature entered a smaller coalition of size <span class="math inline">\(s-1\)</span>, in which case that entering feature’s marginal contribution was weighted by <span class="math inline">\(\alpha_{s-1}\)</span>, since only <span class="math inline">\(s-1\)</span> features were present before it entered.</p>
+<div class="visual-card">
+<div id="fig-kernel-weight-bridge" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A diagram with three stacked boxes. Bottom: a coalition of size s minus 1. Middle: coalition S, of size s. Top: a coalition of size s plus 1. An upward arrow from the bottom box to S is labeled alpha sub s minus 1, since S is the coalition after this feature enters. An upward arrow from S to the top box is labeled alpha sub s, since S is the coalition before this feature enters.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kernel-weight-bridge-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/25-kernel-weight-bridge.svg" class="img-fluid figure-img" alt="A diagram with three stacked boxes. Bottom: a coalition of size s minus 1. Middle: coalition S, of size s. Top: a coalition of size s plus 1. An upward arrow from the bottom box to S is labeled alpha sub s minus 1, since S is the coalition after this feature enters. An upward arrow from S to the top box is labeled alpha sub s, since S is the coalition before this feature enters.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kernel-weight-bridge-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: The same coalition S is both the outcome of one feature entering, weighted by the Shapley weight for size s-1, and the starting point for another feature entering, weighted by the Shapley weight for size s.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Reading <a href="#fig-kernel-weight-bridge" class="quarto-xref">Figure&nbsp;<span>3.2</span></a> from the bottom up: <span class="math inline">\(S\)</span> is the result of adding one feature to some coalition of size <span class="math inline">\(s-1\)</span>, a step weighted by <span class="math inline">\(\alpha_{s-1}\)</span> in the permutation average. Reading it from the top down: <span class="math inline">\(S\)</span> is itself the starting point for adding one more feature to reach a coalition of size <span class="math inline">\(s+1\)</span>, a step weighted by <span class="math inline">\(\alpha_s\)</span>. The same coalition <span class="math inline">\(S\)</span> touches the permutation average twice, once in each direction, and the two touches carry two different weights.</p>
+</section>
+<section id="why-the-regression-weight-combines-both" class="level3" data-number="3.16.2">
+<h3 data-number="3.16.2" class="anchored" data-anchor-id="why-the-regression-weight-combines-both"><span class="header-section-number">3.16.2</span> Why the regression weight combines both</h3>
+<p>KernelSHAP’s regression assigns coalition <span class="math inline">\(S\)</span> a single weight, so it has to combine both roles rather than pick one of the two arbitrarily. It has to preserve the same relative importance that these coalitions carry in the original Shapley marginal-contribution averaging, and <span class="math inline">\(S\)</span> carries that importance through both <span class="math inline">\(\alpha_{s-1}\)</span> and <span class="math inline">\(\alpha_s\)</span> at once. The weighted least-squares normal equations lead to this sum directly: matching them to the Shapley formula requires the weight of a size-<span class="math inline">\(s\)</span> coalition to be proportional to <span class="math inline">\(\alpha_{s-1} + \alpha_s\)</span>. The full algebraic argument for that matching is Lundberg and Lee’s original derivation and is not repeated here. What follows instead checks where this proportionality leads, starting from <span class="math inline">\(\alpha_{s-1}+\alpha_s\)</span> and arriving, by direct algebra, at the familiar SHAP kernel formula.</p>
+</section>
+<section id="the-weight" class="level3" data-number="3.16.3">
+<h3 data-number="3.16.3" class="anchored" data-anchor-id="the-weight"><span class="header-section-number">3.16.3</span> The weight</h3>
+<p><strong>Adding the two neighboring weights.</strong></p>
+<p><span class="math display">\[\alpha_{s-1} + \alpha_s = \frac{(s-1)!\,(p-s)!}{p!} + \frac{s!\,(p-s-1)!}{p!}.\]</span></p>
+<p>Both terms share the factor <span class="math inline">\((s-1)!\,(p-s-1)!\)</span>: in the first term, <span class="math inline">\((p-s)! = (p-s)\cdot(p-s-1)!\)</span>, and in the second term, <span class="math inline">\(s! = s\cdot(s-1)!\)</span>. Factoring it out of both terms,</p>
+<p><span class="math display">\[\alpha_{s-1}+\alpha_s = \frac{(s-1)!\,(p-s-1)!}{p!}\Big[(p-s) + s\Big] = \frac{(s-1)!\,(p-s-1)!}{p!}\cdot p.\]</span></p>
+<p>The bracket collapses to <span class="math inline">\(p\)</span> regardless of <span class="math inline">\(s\)</span>, and that <span class="math inline">\(p\)</span> cancels one factor out of <span class="math inline">\(p! = p\cdot(p-1)!\)</span>, leaving</p>
+<p><span class="math display">\[\alpha_{s-1}+\alpha_s = \frac{(s-1)!\,(p-s-1)!}{(p-1)!}.\]</span></p>
+<p>Pause here before continuing. This says the combined weight of <span class="math inline">\(S\)</span>’s two roles depends on <span class="math inline">\(p\)</span> and <span class="math inline">\(s\)</span> only through this one compact expression, with no reference to which specific features <span class="math inline">\(S\)</span> contains, only to how many.</p>
+<p><strong>The candidate weight.</strong> Define</p>
+<p><span class="math display">\[\pi_s = \frac{p-1}{\binom{p}{s}\,s\,(p-s)}.\]</span></p>
+<p>Expanding <span class="math inline">\(\binom{p}{s} = \dfrac{p!}{s!\,(p-s)!}\)</span>,</p>
+<p><span class="math display">\[\binom{p}{s}\,s\,(p-s) = \frac{p!}{s!\,(p-s)!}\cdot s\cdot(p-s) = \frac{p!}{(s-1)!\,(p-s-1)!},\]</span></p>
+<p>using <span class="math inline">\(s/s! = 1/(s-1)!\)</span> and <span class="math inline">\((p-s)/(p-s)! = 1/(p-s-1)!\)</span> again, the same two simplifications used above. Substituting this back into <span class="math inline">\(\pi_s\)</span>,</p>
+<p><span class="math display">\[\pi_s = \frac{(p-1)\,(s-1)!\,(p-s-1)!}{p!}.\]</span></p>
+<p><strong>Comparing the two results.</strong></p>
+<p><span class="math display">\[\pi_s = \frac{p-1}{p}\Big[\alpha_{s-1} + \alpha_s\Big].\]</span></p>
+<p>This is the key result. <span class="math inline">\(\pi_s\)</span> is the sum of the same two Shapley weights already identified above, <span class="math inline">\(\alpha_{s-1}\)</span> and <span class="math inline">\(\alpha_s\)</span>, scaled by the constant <span class="math inline">\((p-1)/p\)</span>. That constant does not depend on <span class="math inline">\(s\)</span>, so it rescales every coalition size’s weight by the same factor. A weighted least squares fit is unchanged when every weight is multiplied by one common positive constant, since the constant factors out of the minimization entirely. So <span class="math inline">\(\pi_s \propto \alpha_{s-1}+\alpha_s\)</span> is already enough: a regression weighted by <span class="math inline">\(\pi_s\)</span> and a regression weighted directly by <span class="math inline">\(\alpha_{s-1}+\alpha_s\)</span> have the same minimizer.</p>
+<p>Replacing <span class="math inline">\(s\)</span> with <span class="math inline">\(|S|\)</span> recovers the usual form of the SHAP kernel,</p>
+<p><span class="math display">\[\pi(S) = \frac{p-1}{\binom{p}{|S|}\,|S|\,(p-|S|)}, \qquad 1 \le |S| \le p-1,\]</span></p>
+<p>and every piece of it now has a derivation behind it rather than only a name. <span class="math inline">\(\binom{p}{|S|}\)</span> is the number of distinct coalitions of size <span class="math inline">\(|S|\)</span>, and dividing by it spreads <span class="math inline">\(\pi_s\)</span> evenly across every coalition sharing that size, rather than letting sizes with more coalitions dominate simply by outnumbering the rest. <span class="math inline">\(|S|\)</span> and <span class="math inline">\(p-|S|\)</span> came directly out of expanding <span class="math inline">\(\binom{p}{s}\,s\,(p-s)\)</span> above, tracing back to the <span class="math inline">\(s\)</span> and <span class="math inline">\(p-s\)</span> that already sit inside <span class="math inline">\(\alpha_{s-1}\)</span> and <span class="math inline">\(\alpha_s\)</span> themselves. <span class="math inline">\((p-1)\)</span> is the numerator of the constant <span class="math inline">\((p-1)/p\)</span> identified in the comparison above, carried along because it does not change what the regression fits.</p>
+</section>
+<section id="an-example-p4" class="level3" data-number="3.16.4">
+<h3 data-number="3.16.4" class="anchored" data-anchor-id="an-example-p4"><span class="header-section-number">3.16.4</span> An example, <span class="math inline">\(p=4\)</span></h3>
+<p>For four features, the three non-trivial coalition sizes give</p>
+<p><span class="math display">\[\pi_1 = \frac{3}{\binom{4}{1}\cdot1\cdot3} = \frac14, \qquad \pi_2 = \frac{3}{\binom{4}{2}\cdot2\cdot2} = \frac18, \qquad \pi_3 = \frac{3}{\binom{4}{3}\cdot3\cdot1} = \frac14.\]</span></p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Coalition size <span class="math inline">\(s\)</span></th>
+<th style="text-align: right;">Number of coalitions, <span class="math inline">\(\binom{4}{s}\)</span></th>
+<th style="text-align: right;">Weight per coalition, <span class="math inline">\(\pi_s\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;"><span class="math inline">\(1/4\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;"><span class="math inline">\(1/8\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;"><span class="math inline">\(1/4\)</span></td>
+</tr>
+</tbody>
+</table>
+<div class="visual-card">
+<div id="fig-kernel-weights" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two bar charts for four features. Left: weight per coalition is 0.25 for size 1, 0.125 for size 2, and 0.25 for size 3. Right: total mass, weight times count, is 1.0 for size 1, 0.75 for size 2, and 1.0 for size 3.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kernel-weights-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/15-kernel-weights.svg" class="img-fluid figure-img" alt="Two bar charts for four features. Left: weight per coalition is 0.25 for size 1, 0.125 for size 2, and 0.25 for size 3. Right: total mass, weight times count, is 1.0 for size 1, 0.75 for size 2, and 1.0 for size 3.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kernel-weights-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: The SHAP kernel weight for each coalition size, and the total weight summed across all coalitions of that size, for four features.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>Size-1 and size-3 coalitions each receive twice the weight of a size-2 coalition, and the derivation above explains why directly, without appealing to how informative a coalition seems. At <span class="math inline">\(p=4\)</span>, <span class="math inline">\(\alpha_0=\alpha_3=1/4\)</span> and <span class="math inline">\(\alpha_1=\alpha_2=1/12\)</span>. Size 1 combines <span class="math inline">\(\alpha_0+\alpha_1 = 1/4+1/12 = 1/3\)</span>, and size 3 combines <span class="math inline">\(\alpha_2+\alpha_3 = 1/12+1/4=1/3\)</span>, the same sum in both cases. Size 2 combines <span class="math inline">\(\alpha_1+\alpha_2=1/12+1/12=1/6\)</span>, half as much. These sums are exactly <span class="math inline">\(\pi_1, \pi_3,\)</span> and <span class="math inline">\(\pi_2\)</span> once multiplied by <span class="math inline">\((p-1)/p = 3/4\)</span>, matching the table above. The weights are also symmetric, <span class="math inline">\(\pi_s = \pi_{p-s}\)</span>, visible directly here since <span class="math inline">\(\pi_1=\pi_3\)</span>. Retaining <span class="math inline">\(s\)</span> features and masking <span class="math inline">\(p-s\)</span> is, from the masking mechanism’s point of view, the mirror image of retaining <span class="math inline">\(p-s\)</span> features and masking <span class="math inline">\(s\)</span>: the same operation of splitting the feature set into a fixed part and a randomized part, with the two parts swapped. The kernel weights that operation the same way regardless of which side of the split happens to be called “retained.”</p>
+</section>
+<section id="the-two-excluded-coalitions" class="level3" data-number="3.16.5">
+<h3 data-number="3.16.5" class="anchored" data-anchor-id="the-two-excluded-coalitions"><span class="header-section-number">3.16.5</span> The two excluded coalitions</h3>
+<p><span class="math inline">\(\pi_s\)</span> is undefined at <span class="math inline">\(s=0\)</span> and <span class="math inline">\(s=p\)</span>, since both put <span class="math inline">\(s(p-s)=0\)</span> in the denominator. The empty coalition’s approximation is <span class="math inline">\(g(0,\ldots,0) = \phi_0\)</span>, which must equal <span class="math inline">\(v(\varnothing)\)</span> exactly, since <span class="math inline">\(v(\varnothing)\)</span> is already computed directly from the background data. The full coalition’s approximation is <span class="math inline">\(g(1,\ldots,1) = \phi_0 + \sum_j \phi_j\)</span>, which must equal <span class="math inline">\(v(F)\)</span> exactly, the actual prediction being explained. Describing <span class="math inline">\(\pi_0\)</span> and <span class="math inline">\(\pi_p\)</span> as infinite is one way to express this, forcing the fit through both points exactly. In practice, KernelSHAP implementations instead impose</p>
+<p><span class="math display">\[\phi_0 = v(\varnothing), \qquad \phi_0 + \sum_j \phi_j = v(F),\]</span></p>
+<p>directly as constraints on the regression, which has the same effect without dividing by zero.</p>
+<p>Fitting the coalition values with some arbitrary set of regression weights would still produce an additive approximation to <span class="math inline">\(v(S)\)</span>, just not the Shapley one. The derivation above is what connects the two. <span class="math inline">\(\pi(S)\)</span> is proportional to the sum of the two Shapley weights that coalition <span class="math inline">\(S\)</span> touches in the permutation average, so a regression built with these particular weights, together with the two constraints on the empty and full coalitions, has the Shapley value vector as its exact minimizer.</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Weight</th>
+<th>Formula</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Shapley weight</td>
+<td><span class="math inline">\(\alpha_s = \dfrac{s!\,(p-s-1)!}{p!}\)</span></td>
+<td>Weights a feature’s marginal contribution inside the permutation-average formula for <span class="math inline">\(\phi_j\)</span></td>
+</tr>
+<tr class="even">
+<td>SHAP kernel</td>
+<td><span class="math inline">\(\pi(S) = \dfrac{p-1}{\binom{p}{|S|}|S|(p-|S|)}\)</span></td>
+<td>Weights a coalition’s row inside KernelSHAP’s weighted regression</td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="the-same-example-in-matrix-form" class="level2" data-number="3.17">
+<h2 data-number="3.17" class="anchored" data-anchor-id="the-same-example-in-matrix-form"><span class="header-section-number">3.17</span> The same example in matrix form</h2>
+<p>The six non-trivial coalitions of <span class="math inline">\(\{A,B,C\}\)</span>, excluding <span class="math inline">\(\varnothing\)</span> and the full set already pinned by the constraints above, give six approximate equations, using <span class="math inline">\(v(S) - v(\varnothing)\)</span> as the target so that <span class="math inline">\(\phi_0\)</span> does not need to appear:</p>
+<p><span class="math display">\[\{A\}: \phi_A \approx 4 \qquad \{B\}: \phi_B \approx 2 \qquad \{C\}: \phi_C \approx 1\]</span> <span class="math display">\[\{A,B\}: \phi_A+\phi_B \approx 8 \qquad \{A,C\}: \phi_A+\phi_C \approx 5 \qquad \{B,C\}: \phi_B+\phi_C \approx 3\]</span></p>
+<p>Writing all six equations together gives the matrix form</p>
+<p><span class="math display">\[\begin{bmatrix}
+1&amp;0&amp;0\\
+0&amp;1&amp;0\\
+0&amp;0&amp;1\\
+1&amp;1&amp;0\\
+1&amp;0&amp;1\\
+0&amp;1&amp;1
+\end{bmatrix}
+\begin{bmatrix}\phi_A\\ \phi_B\\ \phi_C\end{bmatrix}
+\approx
+\begin{bmatrix}4\\2\\1\\8\\5\\3\end{bmatrix}.\]</span></p>
+<p>Six equations, three unknowns. If <span class="math inline">\(\phi_A = 4\)</span> and <span class="math inline">\(\phi_B = 2\)</span> exactly, row four would require <span class="math inline">\(\phi_A + \phi_B = 6\)</span>, but its target is 8. No choice of <span class="math inline">\(\phi_A,\phi_B,\phi_C\)</span> satisfies every row exactly, because of the <span class="math inline">\(AB\)</span> interaction inside <span class="math inline">\(f\)</span>.</p>
+<div class="visual-card">
+<div id="fig-weighted-regression" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Bar chart comparing target v(S) minus v(empty) against the fitted additive model, for six coalitions. The two bars match exactly for {C} and {A,B}, and differ by one unit for {A}, {B}, {A,C}, and {B,C}.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-weighted-regression-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/16-weighted-regression.svg" class="img-fluid figure-img" alt="Bar chart comparing target v(S) minus v(empty) against the fitted additive model, for six coalitions. The two bars match exactly for {C} and {A,B}, and differ by one unit for {A}, {B}, {A,C}, and {B,C}.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-weighted-regression-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.4: Target values against the fitted additive model’s values, for each of the six non-trivial coalitions, using the Shapley-consistent solution.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The Shapley-consistent solution, <span class="math inline">\(\phi_A = 5, \phi_B = 3, \phi_C = 1\)</span>, does not resolve the inconsistency by fitting every row exactly. <a href="#fig-weighted-regression" class="quarto-xref">Figure&nbsp;<span>3.4</span></a> shows it matches <span class="math inline">\(\{C\}\)</span> and <span class="math inline">\(\{A,B\}\)</span> exactly and is off by one unit at <span class="math inline">\(\{A\}\)</span>, <span class="math inline">\(\{B\}\)</span>, <span class="math inline">\(\{A,C\}\)</span>, and <span class="math inline">\(\{B,C\}\)</span>: the weighted least squares objective asks for the fit that minimizes the total weighted squared error across all six rows at once, not a perfect fit at every row.</p>
+<section id="why-the-full-coalition-constraint-matters" class="level3" data-number="3.17.1">
+<h3 data-number="3.17.1" class="anchored" data-anchor-id="why-the-full-coalition-constraint-matters"><span class="header-section-number">3.17.1</span> Why the full-coalition constraint matters</h3>
+<p>For three features, every one of the six middle coalitions receives the same kernel weight, <span class="math inline">\(\pi(S) = 1/3\)</span> for both <span class="math inline">\(|S|=1\)</span> and <span class="math inline">\(|S|=2\)</span>, so the weighting alone does not distinguish this case from an ordinary, unweighted regression. Fitting <span class="math inline">\(\phi_A,\phi_B,\phi_C\)</span> to the six targets by unconstrained least squares gives <span class="math inline">\((4.6, 2.6, 0.6)\)</span>, close to the Shapley values but not equal to them, summing to <span class="math inline">\(7.8\)</span> rather than the required <span class="math inline">\(9\)</span>. Enforcing the full-coalition constraint, <span class="math inline">\(\phi_A+\phi_B+\phi_C = v(A,B,C)-v(\varnothing) = 9\)</span>, and solving again (equivalently, substituting <span class="math inline">\(\phi_C = 9-\phi_A-\phi_B\)</span> before fitting the remaining two coefficients) gives <span class="math inline">\(\phi_A=5,\phi_B=3,\phi_C=1\)</span> exactly. Without this constraint, the regression finds some additive approximation to the six coalition values. With it, the regression’s solution is the Shapley value vector.</p>
+</section>
+</section>
+<section id="sampling-coalitions" class="level2" data-number="3.18">
+<h2 data-number="3.18" class="anchored" data-anchor-id="sampling-coalitions"><span class="header-section-number">3.18</span> Sampling coalitions</h2>
+<p>The toy example enumerated all six non-trivial coalitions directly, which is feasible because <span class="math inline">\(p=3\)</span> is small. <a href="#tbl-growth" class="quarto-xref">Table&nbsp;<span>3.1</span></a> already showed that <span class="math inline">\(2^p\)</span> becomes unmanageable well before <span class="math inline">\(p\)</span> reaches 20. In that setting, KernelSHAP samples coalitions rather than enumerating them: coalitions are drawn according to a distribution built from <span class="math inline">\(\pi(S)\)</span>, more model evaluations go to the coalition sizes the kernel weights most heavily, and the weighted regression is solved on the sampled coalitions instead of the complete set. More sampled coalitions generally reduce the Monte Carlo error in the resulting <span class="math inline">\(\phi_j\)</span> estimates, at the cost of more model evaluations. The practice chapter covers how specific software packages choose between exact enumeration and sampling in practice.</p>
+</section>
+<section id="treeshap" class="level2" data-number="3.19">
+<h2 data-number="3.19" class="anchored" data-anchor-id="treeshap"><span class="header-section-number">3.19</span> TreeSHAP</h2>
+<p>KernelSHAP and TreeSHAP are computing the same thing: a Shapley value, built from coalition values <span class="math inline">\(v(S)\)</span> and marginal contributions <span class="math inline">\(v(S\cup\{j\})-v(S)\)</span>, averaged with the weights derived earlier. What differs is how <span class="math inline">\(v(S)\)</span> is obtained. KernelSHAP treats the model as a black box: every coalition’s value requires building masked rows and calling the model again. When the model is a decision tree, or an ensemble of them, its internal structure can be used to obtain the same coalition values directly, without calling the model as a black box at all. That is what TreeSHAP does.</p>
+<section id="a-small-tree-worked-by-hand" class="level3" data-number="3.19.1">
+<h3 data-number="3.19.1" class="anchored" data-anchor-id="a-small-tree-worked-by-hand"><span class="header-section-number">3.19.1</span> A small tree, worked by hand</h3>
+<p>Consider a tree built on two features, <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>.</p>
+<div class="visual-card">
+<div id="fig-treeshap-tree" class="quarto-float quarto-figure quarto-figure-center anchored" alt="A decision tree. Root node: A less than or equal to 5, cover 100. Left leaf: prediction 10, cover 60. Right node: B less than or equal to 2, cover 40. Right-left leaf: prediction 20, cover 10. Right-right leaf: prediction 30, cover 30. The path for A = 7, B = 1 is highlighted: root to the right branch, then to the right-left leaf, ending at prediction 20.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-treeshap-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/24-treeshap-example.svg" class="img-fluid figure-img" alt="A decision tree. Root node: A less than or equal to 5, cover 100. Left leaf: prediction 10, cover 60. Right node: B less than or equal to 2, cover 40. Right-left leaf: prediction 20, cover 10. Right-right leaf: prediction 30, cover 30. The path for A = 7, B = 1 is highlighted: root to the right branch, then to the right-left leaf, ending at prediction 20.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-treeshap-tree-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.5: A small decision tree with training-cover counts at each node, and the path followed by the observation A = 7, B = 1.
+</figcaption>
+</figure>
+</div>
+</div>
+<p>The root splits on whether <span class="math inline">\(A \le 5\)</span>. If not, a second split checks whether <span class="math inline">\(B \le 2\)</span>. Each node in <a href="#fig-treeshap-tree" class="quarto-xref">Figure&nbsp;<span>3.5</span></a> is labeled with its <strong>cover</strong>: how many training observations passed through that node while the tree was being built. The root’s cover is 100, meaning all 100 training rows reached it. Of those, 60 satisfied <span class="math inline">\(A \le 5\)</span> and reached the left leaf directly. The other 40 had <span class="math inline">\(A&gt;5\)</span> and reached the <span class="math inline">\(B \le 2\)</span> split, where 10 of them satisfied <span class="math inline">\(B \le 2\)</span> and 30 did not. These cover counts are a byproduct of fitting the tree. They say nothing about the observation being explained. They describe how the training data was distributed through the tree.</p>
+<p>Take the observation <span class="math inline">\(A=7, B=1\)</span>, and compute <span class="math inline">\(v(S)\)</span> for every coalition of <span class="math inline">\(\{A,B\}\)</span>.</p>
+<p><strong><span class="math inline">\(S = \{A,B\}\)</span>, both known.</strong> This is the ordinary case: follow the observation’s own values through the tree. <span class="math inline">\(A=7&gt;5\)</span>, so go right. <span class="math inline">\(B=1\le2\)</span>, so go left at the second split, reaching the leaf with prediction 20. So</p>
+<p><span class="math display">\[v(\{A,B\}) = 20.\]</span></p>
+<p><strong><span class="math inline">\(S = \{A\}\)</span>, <span class="math inline">\(B\)</span> unavailable.</strong> <span class="math inline">\(A=7&gt;5\)</span> still sends the observation right, to the <span class="math inline">\(B\le2\)</span> split, with cover 40. At that split, <span class="math inline">\(B\)</span>’s value is unavailable, so the tree cannot choose a branch from the observation itself. Tree-path-dependent TreeSHAP resolves this using the cover recorded at that split: 10 of the 40 training rows that reached it went left, and 30 went right, giving weights <span class="math inline">\(10/40=0.25\)</span> and <span class="math inline">\(30/40=0.75\)</span>. The coalition value is the cover-weighted average of the two leaves reachable from there:</p>
+<p><span class="math display">\[v(\{A\}) = 0.25(20) + 0.75(30) = 27.5.\]</span></p>
+<p>When <span class="math inline">\(B\)</span> is unavailable, TreeSHAP does not substitute one guessed value for it. In this tree-path-dependent calculation, it averages over the branches using the proportions already stored in the tree from training.</p>
+<p><strong><span class="math inline">\(S = \{B\}\)</span>, <span class="math inline">\(A\)</span> unavailable.</strong> Now <span class="math inline">\(A\)</span> is unavailable at the root itself, so both of the root’s branches must be considered, weighted by the root’s own cover split: 60 of 100 training rows went left, 40 went right, giving weights <span class="math inline">\(0.6\)</span> and <span class="math inline">\(0.4\)</span>. The left branch leads directly to a leaf, prediction 10, with no further dependence on <span class="math inline">\(B\)</span>. The right branch reaches the <span class="math inline">\(B\le2\)</span> split, and here <span class="math inline">\(B=1\)</span> is known, so it goes left to the leaf with prediction 20. So</p>
+<p><span class="math display">\[v(\{B\}) = 0.6(10) + 0.4(20) = 14.\]</span></p>
+<p>This case shows something the previous one did not: because the unavailable feature, <span class="math inline">\(A\)</span>, sits above the known feature, <span class="math inline">\(B\)</span>, in the tree, more than one path has to be kept under consideration at once, one for each way <span class="math inline">\(A\)</span>’s missing split could have gone.</p>
+<p><strong><span class="math inline">\(S = \varnothing\)</span>, neither known.</strong> With no feature values available at all, every split is resolved purely by cover proportions, all the way down:</p>
+<p><span class="math display">\[v(\varnothing) = 0.6(10) + 0.4\big[0.25(20) + 0.75(30)\big] = 0.6(10) + 0.4(27.5) = 17.\]</span></p>
+<p>Collecting all four values:</p>
+<p><span class="math display">\[v(\varnothing) = 17, \qquad v(\{A\}) = 27.5, \qquad v(\{B\}) = 14, \qquad v(\{A,B\}) = 20.\]</span></p>
+<p>Nothing about the Shapley formula changes at this point. TreeSHAP has only given a way to obtain these four coalition values from the tree’s structure, in place of the masking-and-averaging calculation used earlier in this chapter. The formula that turns them into <span class="math inline">\(\phi_A\)</span> and <span class="math inline">\(\phi_B\)</span> is the same one already derived, now applied with <span class="math inline">\(p=2\)</span> features, where both weights equal <span class="math inline">\(1/2\)</span>:</p>
+<p><span class="math display">\[\phi_A = \tfrac12\big[v(\{A\}) - v(\varnothing)\big] + \tfrac12\big[v(\{A,B\}) - v(\{B\})\big] = \tfrac12(10.5) + \tfrac12(6) = 8.25,\]</span></p>
+<p><span class="math display">\[\phi_B = \tfrac12\big[v(\{B\}) - v(\varnothing)\big] + \tfrac12\big[v(\{A,B\}) - v(\{A\})\big] = \tfrac12(-3) + \tfrac12(-7.5) = -5.25.\]</span></p>
+<p>As a check,</p>
+<p><span class="math display">\[v(\varnothing) + \phi_A + \phi_B = 17 + 8.25 - 5.25 = 20,\]</span></p>
+<p>the tree’s prediction for this observation. <span class="math inline">\(\phi_A\)</span> is positive: across the two contexts <span class="math inline">\(A\)</span> could enter, knowing <span class="math inline">\(A=7\)</span> moved the tree’s output upward relative to what the cover-weighted average without it would have given. <span class="math inline">\(\phi_B\)</span> is negative, by the same reasoning in the other direction. Neither statement claims that <span class="math inline">\(A\)</span> or <span class="math inline">\(B\)</span> causes the predicted value to be higher or lower in reality. Both describe how this particular fitted tree used these particular feature values, relative to its own training-cover baseline.</p>
+<p>We computed all four coalition values explicitly here because there are only two features. Real TreeSHAP does not enumerate every coalition this way. As it walks the tree, it keeps track, at each node, of which features have appeared on the path so far, how many coalition sizes could have produced that path, and how the cover-based weight of reaching that path changes depending on whether a given split’s feature is treated as present or absent. Carrying these path weights along as it descends and returns from each node lets TreeSHAP accumulate the Shapley-weighted marginal contributions for every feature in a single pass over the tree, rather than by evaluating <span class="math inline">\(2^p\)</span> coalitions separately. That bookkeeping is a dynamic-programming step: it reuses partial computations shared across many coalitions instead of redoing them from scratch. Its algorithmic detail is not needed to understand what TreeSHAP computes, only that it is computing the same <span class="math inline">\(\phi_j\)</span> derived above.</p>
+<p>For an ensemble of many trees, such as XGBoost, each tree is walked this way and produces its own contribution for each feature. Because the ensemble’s prediction is built from the individual trees’ outputs, the trees’ contributions combine directly: a feature’s SHAP value for the ensemble is the sum of its SHAP value within each tree.</p>
+</section>
+<section id="tree-path-dependent-and-interventional-treeshap" class="level3" data-number="3.19.2">
+<h3 data-number="3.19.2" class="anchored" data-anchor-id="tree-path-dependent-and-interventional-treeshap"><span class="header-section-number">3.19.2</span> Tree-path-dependent and interventional TreeSHAP</h3>
+<p>The example above used <strong>tree-path-dependent</strong> TreeSHAP, XGBoost’s default when no background data is supplied. It resolves a missing feature using the cover statistics recorded in the fitted tree itself, the 60/40 and 10/30 splits used above, and needs no separate background dataset.</p>
+<p><strong>Interventional</strong> TreeSHAP instead takes an explicit background dataset, exactly as KernelSHAP does, and targets the marginal value function <span class="math inline">\(v_{\text{marginal}}(S)\)</span> defined earlier in this chapter. It still exploits the tree structure to compute this efficiently, but the background observations, not the training cover recorded in the tree, determine how a missing feature is integrated out.</p>
+<p>In particular, tree-path-dependent TreeSHAP is not the conditional value function <span class="math inline">\(\mathbb{E}[f(X) \mid X_S = x_S]\)</span> defined earlier. It uses the proportions of training data recorded at each split, not a conditional distribution estimated from data. The previous chapter’s comparison illustrated the difference this makes in practice: interventional TreeSHAP matched KernelSHAP to numerical precision once both used the same explicit background, while tree-path-dependent TreeSHAP, with no background involved at all, produced different values from a background-based computation on the same model and the same observations.</p>
+</section>
+<section id="kernelshap-and-treeshap-compared" class="level3" data-number="3.19.3">
+<h3 data-number="3.19.3" class="anchored" data-anchor-id="kernelshap-and-treeshap-compared"><span class="header-section-number">3.19.3</span> KernelSHAP and TreeSHAP compared</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>KernelSHAP</th>
+<th>TreeSHAP</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Applies to</td>
+<td>any model reachable through a prediction function</td>
+<td>supported tree models (single trees and tree ensembles)</td>
+</tr>
+<tr class="even">
+<td>Treats the model as</td>
+<td>a black box</td>
+<td>a structure to be walked directly</td>
+</tr>
+<tr class="odd">
+<td>Main computation</td>
+<td>mask inputs, evaluate the model on each masked row, fit a weighted regression</td>
+<td>propagate coalition weights through the tree’s splits, accumulating contributions as it goes</td>
+</tr>
+<tr class="even">
+<td>Uses the tree’s internal structure</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+</tbody>
+</table>
+<div class="visual-card">
+<div id="fig-kernelshap-vs-treeshap" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Two parallel flowcharts. The KernelSHAP column: pick a background, sample coalitions, mask and evaluate the model on every background row, average to estimate v(S), fit a weighted regression, read off the coefficients. The TreeSHAP column: walk each tree, track both branches at every split weighted by coverage, combine branch outcomes using tree structure, accumulate contributions, sum across trees, read off the coefficients.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kernelshap-vs-treeshap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="images/17-kernelshap-vs-treeshap.svg" class="img-fluid figure-img" alt="Two parallel flowcharts. The KernelSHAP column: pick a background, sample coalitions, mask and evaluate the model on every background row, average to estimate v(S), fit a weighted regression, read off the coefficients. The TreeSHAP column: walk each tree, track both branches at every split weighted by coverage, combine branch outcomes using tree structure, accumulate contributions, sum across trees, read off the coefficients.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kernelshap-vs-treeshap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.6: The two algorithms’ workflows side by side.
+</figcaption>
+</figure>
+</div>
+</div>
+<p><a href="#fig-kernelshap-vs-treeshap" class="quarto-xref">Figure&nbsp;<span>3.6</span></a> lines the two workflows up directly. For supported tree models, TreeSHAP is usually much more computationally efficient than KernelSHAP, because it never calls the model repeatedly on masked inputs. KernelSHAP remains the option for models TreeSHAP does not support: linear models, neural networks, support vector machines, or any model reachable only through a prediction function.</p>
+</section>
+</section>
+<section id="classification-and-the-output-scale" class="level2" data-number="3.20">
+<h2 data-number="3.20" class="anchored" data-anchor-id="classification-and-the-output-scale"><span class="header-section-number">3.20</span> Classification and the output scale</h2>
+<p>For a classifier, <span class="math inline">\(v(S)\)</span> can be built on whichever output the fitted model produces, using the same masking construction as before, <span class="math inline">\(v(S) = \mathbb{E}[f(x_S, X_{\bar S})]\)</span>, with <span class="math inline">\(f\)</span> specialized to whichever scale is being explained. SHAP decomposes whatever model output was used to define <span class="math inline">\(v(S)\)</span>. It does not choose a scale on its own.</p>
+<p>Two choices of <span class="math inline">\(f\)</span> are common for a binary classifier. Write <span class="math inline">\(p(x)\)</span> for the model’s predicted probability and <span class="math inline">\(\eta(x)\)</span> for its raw margin, or log-odds, score, related by <span class="math inline">\(p(x) = \text{logistic}(\eta(x))\)</span>.</p>
+<p><strong>Probability value function.</strong></p>
+<p><span class="math display">\[v_{\text{prob}}(S) = \mathbb{E}\big[p(x_S, X_{\bar S})\big], \qquad \phi_0^{(\text{prob})} + \sum_j \phi_j^{(\text{prob})} = p(x).\]</span></p>
+<p><strong>Raw-margin value function.</strong></p>
+<p><span class="math display">\[v_{\text{raw}}(S) = \mathbb{E}\big[\eta(x_S, X_{\bar S})\big], \qquad \phi_0^{(\text{raw})} + \sum_j \phi_j^{(\text{raw})} = \eta(x), \qquad p(x) = \text{logistic}\big(\eta(x)\big).\]</span></p>
+<p>Each value function produces its own complete, self-consistent decomposition. The previous chapter demonstrated both, on the same model and the same three observations. A raw-margin baseline of <span class="math inline">\(-0.0201\)</span>, computed with no background, summed with its SHAP values to a raw margin of <span class="math inline">\(-0.8974\)</span>, which the logistic function converts to <span class="math inline">\(0.2896\)</span>. A probability baseline of <span class="math inline">\(0.5128\)</span>, computed with an explicit background, summed directly to that same <span class="math inline">\(0.2896\)</span>. Both reconstructions are correct. They are two different, complete decompositions of the same prediction, not the same numbers en route to the same answer.</p>
+<p>The two baselines are not related to each other by the logistic function, because the logistic function is nonlinear:</p>
+<p><span class="math display">\[\mathbb{E}\big[\text{logistic}(\eta(X))\big] \;\neq\; \text{logistic}\big(\mathbb{E}[\eta(X)]\big).\]</span></p>
+<p>The left side is <span class="math inline">\(\phi_0^{(\text{prob})}\)</span>, an average of probabilities. The right side is the logistic function applied after averaging a raw margin, not before. Computed on the same background, the previous chapter’s numbers show the gap directly: the raw margin there averages to <span class="math inline">\(0.0864\)</span>, and <span class="math inline">\(\text{logistic}(0.0864) = 0.5216\)</span>, while the probability baseline computed on that same background is <span class="math inline">\(0.5128\)</span>. The same holds feature by feature: <span class="math inline">\(\phi_j^{(\text{prob})} \neq \text{logistic}\big(\phi_j^{(\text{raw})}\big)\)</span>. Only a complete sum, an entire baseline plus every feature’s contribution on one consistent scale, converts to the other scale. A baseline or a single contribution, taken on its own, does not.</p>
+</section>
+<section id="linear-regression-as-a-special-case" class="level2" data-number="3.21">
+<h2 data-number="3.21" class="anchored" data-anchor-id="linear-regression-as-a-special-case"><span class="header-section-number">3.21</span> Linear regression as a special case</h2>
+<p>For a linear model, <span class="math inline">\(f(x) = \beta_0 + \sum_j \beta_j x_j\)</span>, the marginal value function has a closed form. Masking a set of features <span class="math inline">\(\bar S\)</span> means replacing them with <span class="math inline">\(X_{\bar S}\)</span> drawn from the background, so</p>
+<p><span class="math display">\[v(S) = \mathbb{E}\big[f(x_S, X_{\bar S})\big] = \beta_0 + \sum_{j \in S} \beta_j x_j + \sum_{j \notin S} \beta_j\, \mathbb{E}[X_j].\]</span></p>
+<p>This holds regardless of whether the background features are correlated with each other, because expectation distributes over a sum term by term no matter how the terms are related: <span class="math inline">\(\mathbb{E}[\beta_j X_j]\)</span> only ever needs <span class="math inline">\(\mathbb{E}[X_j]\)</span>, not the joint distribution of <span class="math inline">\(X_{\bar S}\)</span>. The marginal contribution of feature <span class="math inline">\(j\)</span> to any coalition <span class="math inline">\(S\)</span> not containing it is then</p>
+<p><span class="math display">\[v(S \cup \{j\}) - v(S) = \beta_j x_j - \beta_j\,\mathbb{E}[X_j] = \beta_j\,(x_j - \mathbb{E}[X_j]),\]</span></p>
+<p>the same value for every <span class="math inline">\(S\)</span>. Since it does not depend on context, averaging it over every coalition, as the Shapley formula does, returns that same constant:</p>
+<p><span class="math display">\[\phi_j = \beta_j\,(x_j - \mathbb{E}[X_j]).\]</span></p>
+<p>A feature’s SHAP value is its regression coefficient times how far the observation’s value sits from the background average. This also explains, for the special case of a linear model under the marginal value function, why feature order does not matter: since <span class="math inline">\(j\)</span>’s contribution is identical in every context, the order in which features are added cannot change it, so the general averaging machinery of this chapter reduces to a single number.</p>
+<p>Correlation among predictors does not affect this result, because the marginal value function only ever asks for <span class="math inline">\(\mathbb{E}[X_j]\)</span>, one feature’s own average, not a joint distribution. Correlation matters if the conditional value function is used instead: <span class="math inline">\(\mathbb{E}[X_j \mid X_S = x_S]\)</span> generally depends on <span class="math inline">\(x_S\)</span> when <span class="math inline">\(X_j\)</span> is correlated with the retained features, so the closed form above no longer holds and <span class="math inline">\(\phi_j\)</span> can depend on which other features are present. With a nonlinear model, the marginal contribution of <span class="math inline">\(j\)</span> is generally not constant across coalitions either way, which is why the general machinery of this chapter, coalitions, masking, weighted regression, and tree traversal, is needed for anything beyond this special case.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./practice.html" class="pagination-link" aria-label="Using SHAP in R and Python">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Using SHAP in R and Python</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./exercises.html" class="pagination-link" aria-label="A worked case study">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">A worked case study</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
